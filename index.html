@@ -1059,9 +1059,12 @@ let currentHistSubmission = null;
 // ===========================
 document.addEventListener('DOMContentLoaded', () => {
   // Disable datalabels globally — only enable per-chart where needed
-  if (typeof ChartDataLabels !== 'undefined') {
-    Chart.defaults.plugins.datalabels.display = false;
-  }
+  try {
+    if (typeof ChartDataLabels !== 'undefined') {
+      if (!Chart.defaults.plugins.datalabels) Chart.defaults.plugins.datalabels = {};
+      Chart.defaults.plugins.datalabels.display = false;
+    }
+  } catch(e) {}
   sb = supabase.createClient(SB_URL, SB_KEY);
   checkAuth();
   initDefVals();
