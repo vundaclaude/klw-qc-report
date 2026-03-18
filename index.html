@@ -600,6 +600,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
         <button class="filter-btn" onclick="setDateFilter('today',this)">Hôm nay</button>
         <button class="filter-btn" onclick="setDateFilter('7d',this)">7 ngày</button>
         <button class="filter-btn" onclick="setDateFilter('30d',this)">30 ngày</button>
+        <button class="filter-btn" onclick="refreshDashboard(this)" title="Tải lại dữ liệu">🔄</button>
       </div>
       <select class="filter-select" id="lineFilterSel" onchange="setLineFilter(this.value)">
         <option value="all">Tất cả chuyền</option>
@@ -1408,6 +1409,14 @@ function resetForm() {
 // ===========================
 // DASHBOARD — TAB 2
 // ===========================
+function refreshDashboard(btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  managerLoaded = false;
+  loadManager().finally(function() {
+    if (btn) { btn.disabled = false; btn.textContent = '🔄'; }
+  });
+}
+
 async function loadManager() {
   try {
     const { data, error } = await sb.from('qc_submissions')
