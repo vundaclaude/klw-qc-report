@@ -267,6 +267,8 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 .filter-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
 .filter-select{height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;
   font-size:13px;font-family:inherit;outline:none;background:var(--card);cursor:pointer;}
+.date-range-label{margin-left:auto;font-size:12px;font-weight:600;color:var(--muted);
+  background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;white-space:nowrap;}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 @media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
 .kpi-card{background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);
@@ -622,6 +624,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
         <button class="filter-btn" onclick="setDateFilter('30d',this)">30 ngày</button>
         <button class="filter-btn" onclick="refreshDashboard(this)" title="Tải lại dữ liệu">🔄</button>
       </div>
+      <div class="date-range-label" id="dateRangeLabel"></div>
       <select class="filter-select" id="lineFilterSel" onchange="setLineFilter(this.value)">
         <option value="all">Tất cả chuyền</option>
         <option value="10">Chuyền 10</option>
@@ -1478,6 +1481,7 @@ function getFilteredData() {
 }
 
 function renderManager() {
+  updateDateRangeLabel();
   const data = getFilteredData();
   const totalInspected = data.reduce(function(s,r) { return s + (r.total_inspected||0); }, 0);
   const totalDefects = data.reduce(function(s,r) { return s + (r.total_defects||0); }, 0);
@@ -1659,10 +1663,29 @@ function renderRecentTable(data) {
   }).join('');
 }
 
+function updateDateRangeLabel() {
+  const el = document.getElementById('dateRangeLabel');
+  if (!el) return;
+  const now = new Date();
+  const fmt = function(d) { return d.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'}); };
+  if (managerDateFilter === 'today') {
+    el.textContent = '📅 ' + fmt(now);
+  } else if (managerDateFilter === '7d') {
+    const from = new Date(now.getTime() - 7 * 86400000);
+    el.textContent = '📅 ' + fmt(from) + ' – ' + fmt(now);
+  } else if (managerDateFilter === '30d') {
+    const from = new Date(now.getTime() - 30 * 86400000);
+    el.textContent = '📅 ' + fmt(from) + ' – ' + fmt(now);
+  } else {
+    el.textContent = '📅 Tất cả dữ liệu';
+  }
+}
+
 function setDateFilter(mode, btn) {
   managerDateFilter = mode;
   document.querySelectorAll('#dateFilterBtns .filter-btn').forEach(function(b) { b.classList.remove('active'); });
   if (btn) btn.classList.add('active');
+  updateDateRangeLabel();
   if (managerLoaded) renderManager();
 }
 
