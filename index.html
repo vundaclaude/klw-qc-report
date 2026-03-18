@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -153,6 +154,30 @@
     }
 
     .reset-btn:hover { background: #e74c3c; color: white; }
+
+    .excel-btn {
+      display: inline-block;
+      padding: 12px 32px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+      font-weight: 600;
+    }
+
+    .excel-btn:hover { background: #1e8449; }
+
+    .action-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
 
     /* ── TOAST ── */
     .toast {
@@ -329,7 +354,10 @@
         </div>
       </div>
 
-      <button class="reset-btn" onclick="nhapLai()">← Nhập Báo Cáo Mới</button>
+      <div class="action-row">
+        <button class="excel-btn" onclick="downloadExcel()">⬇️ Tải Excel</button>
+        <button class="reset-btn" style="margin:0" onclick="nhapLai()">← Nhập Báo Cáo Mới</button>
+      </div>
     </div>
   </div>
 
@@ -608,8 +636,53 @@
     colTots.forEach(ct => { rt += `<td>${ct}</td>`; });
     rt += `<td class="grand-total">${r.grand_total}</td></tr></tfoot></table></div>`;
 
-    document.getElementById("modalBody").innerHTML = rt;
+    document.getElementById("modalBody").innerHTML = rt +
+      `<div style="text-align:center;margin-top:20px">
+        <button class="excel-btn" onclick="downloadExcel(window._reportCache['${id}'])">⬇️ Tải Excel</button>
+      </div>`;
     document.getElementById("modalOverlay").classList.add('open');
+  }
+
+  // ── Excel Export ──
+  function buildExcelData(data, rowTots, colTots, grand, staffName, dateStr) {
+    const header = ['Công Đoạn', ...loaiLoi, 'Tổng'];
+    const rows = congDoan.map((cd, i) => [cd, ...data[i], rowTots[i]]);
+    const footer = ['Tổng Cộng', ...colTots, grand];
+    const meta = staffName ? [['Nhân viên:', staffName], ['Ngày:', dateStr], []] : [[]];
+    return [...meta, header, ...rows, footer];
+  }
+
+  function downloadExcel(reportData) {
+    let data, rowTots, colTots, grand, staffName, dateStr;
+
+    if (reportData) {
+      data     = reportData.data;
+      rowTots  = reportData.row_totals;
+      colTots  = reportData.col_totals;
+      grand    = reportData.grand_total;
+      staffName = reportData.staff_name;
+      const dt = new Date(reportData.created_at);
+      dateStr  = dt.toLocaleDateString('vi-VN');
+    } else {
+      data     = getData();
+      rowTots  = data.map(row => row.reduce((a, b) => a + b, 0));
+      colTots  = loaiLoi.map((_, j) => data.reduce((a, row) => a + row[j], 0));
+      grand    = rowTots.reduce((a, b) => a + b, 0);
+      staffName = document.getElementById("staffName").value.trim();
+      dateStr  = new Date().toLocaleDateString('vi-VN');
+    }
+
+    const sheetData = buildExcelData(data, rowTots, colTots, grand, staffName, dateStr);
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+    // Column widths
+    ws['!cols'] = [{ wch: 22 }, ...loaiLoi.map(() => ({ wch: 16 })), { wch: 10 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Báo Cáo QC');
+
+    const fileName = `QC_${staffName || 'report'}_${dateStr.replace(/\//g, '-')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   }
 
   function closeModal(e) {
