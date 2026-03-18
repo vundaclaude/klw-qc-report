@@ -273,9 +273,12 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 .filter-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
 .filter-select{height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;
   font-size:13px;font-family:inherit;outline:none;background:var(--card);cursor:pointer;}
-.date-range-badge{width:100%;background:var(--card);border:1px solid var(--border);
-  border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--navy);
-  box-shadow:0 2px 8px rgba(0,0,0,0.07);text-align:center;}
+.date-range-float{position:fixed;top:126px;left:50%;transform:translateX(-50%);
+  background:var(--navy);color:#fff;border-radius:20px;padding:5px 16px;
+  font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.2);
+  z-index:48;white-space:nowrap;display:none;}
+.date-range-float.visible{display:block;}
+@media(max-width:640px){.date-range-float{top:116px;}}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 @media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
 .kpi-card{background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);
@@ -645,9 +648,10 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
         <option value="18">Chuyền 18</option>
         <option value="19">Chuyền 19</option>
       </select>
-      <!-- Date range badge inside sticky bar — always visible -->
-      <div class="date-range-badge" id="dateRangeLabel"></div>
     </div>
+
+    <!-- Fixed floating date range pill -->
+    <div class="date-range-float" id="dateRangeLabel"></div>
 
     <div class="kpi-grid">
       <div class="kpi-card blue"><div class="ki">📋</div><div class="kv" id="kpi1">0</div><div class="kl">Lần kiểm tra</div></div>
@@ -1085,6 +1089,8 @@ function showPage(page) {
   const pageMap = {input:'pageInput', manager:'pageManager', history:'pageHistory', admin:'pageAdmin'};
   const el = document.getElementById(pageMap[page]);
   if (el) el.classList.add('active');
+  const fl = document.getElementById('dateRangeLabel');
+  if (fl) fl.classList.toggle('visible', page === 'manager');
 
   document.querySelectorAll('.nav-tab').forEach(function(b) {
     b.classList.toggle('active', b.dataset.page === page);
