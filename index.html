@@ -259,6 +259,12 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 .filter-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
 .filter-select{height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;
   font-size:13px;font-family:inherit;outline:none;background:var(--card);cursor:pointer;}
+.dash-clock{display:flex;align-items:center;justify-content:space-between;
+  background:var(--navy);border-radius:14px;padding:14px 20px;margin-bottom:18px;
+  box-shadow:0 4px 16px rgba(15,21,53,0.18);}
+.dash-clock-time{font-size:28px;font-weight:800;color:#fff;letter-spacing:2px;font-variant-numeric:tabular-nums;}
+.dash-clock-date{font-size:13px;color:rgba(255,255,255,0.65);text-align:right;line-height:1.5;}
+@media(max-width:640px){.dash-clock-time{font-size:22px;} .dash-clock-date{font-size:11px;}}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 @media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
 .kpi-card{background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);
@@ -615,6 +621,11 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
         <option value="18">Chuyền 18</option>
         <option value="19">Chuyền 19</option>
       </select>
+    </div>
+
+    <div class="dash-clock">
+      <div class="dash-clock-time" id="dashClockTime">--:--:--</div>
+      <div class="dash-clock-date" id="dashClockDate"></div>
     </div>
 
     <div class="kpi-grid">
@@ -1081,8 +1092,14 @@ function tick() {
   const ss = String(now.getSeconds()).padStart(2,'0');
   const timeEl = document.getElementById('clockTime');
   const dateEl = document.getElementById('clockDate');
-  if (timeEl) timeEl.textContent = hh + ':' + mm + ':' + ss;
-  if (dateEl) dateEl.textContent = now.toLocaleDateString('vi-VN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const dashTime = document.getElementById('dashClockTime');
+  const dashDate = document.getElementById('dashClockDate');
+  const timeStr = hh + ':' + mm + ':' + ss;
+  const dateStr = now.toLocaleDateString('vi-VN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  if (timeEl) timeEl.textContent = timeStr;
+  if (dateEl) dateEl.textContent = dateStr;
+  if (dashTime) dashTime.textContent = timeStr;
+  if (dashDate) dashDate.textContent = dateStr;
 }
 
 // ===========================
