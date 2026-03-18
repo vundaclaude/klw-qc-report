@@ -1522,7 +1522,7 @@ function renderLineChart(data) {
     const d = lineMap[l];
     return d.inspected > 0 ? parseFloat(((d.defects / d.inspected) * 100).toFixed(2)) : 0;
   });
-  const colors = rates.map(function(r) { return r < 2 ? '#27ae60' : r <= 5 ? '#e67e22' : '#e74c3c'; });
+  const colors = rates.map(function(r) { return r < 9 ? '#27ae60' : r < 15 ? '#c9a000' : '#e74c3c'; });
 
   chartLineInst = new Chart(ctx, {
     type: 'bar',
@@ -1554,7 +1554,7 @@ function renderDefChart(data) {
     }
   });
 
-  const catColors = {work:'#e74c3c', mach:'#3498db', matl:'#f39c12', other:'#27ae60'};
+  const catColors = {work:'#e74c3c', mach:'#8e44ad', matl:'#e67e22', other:'#95a5a6'};
   const labels = DEFECTS.map(function(d) { return d.code; });
   const vals = DEFECTS.map(function(d) { return totals[d.code]; });
   const bgColors = DEFECTS.map(function(d) { return catColors[d.cat]; });
