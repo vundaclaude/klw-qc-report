@@ -305,19 +305,31 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
   border-radius:6px;font-size:11px;font-weight:700;color:#fff;background:var(--navy2);}
 
 /* ===== TAB 3 — HISTORY ===== */
+.hist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
 .hist-list{display:flex;flex-direction:column;gap:8px;}
-.hist-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:14px 16px;
-  display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.2s;}
+.hist-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:12px 14px;
+  display:flex;align-items:center;gap:12px;transition:all 0.2s;}
 .hist-card:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(79,110,247,0.12);}
-.hist-time{text-align:center;flex-shrink:0;min-width:48px;}
-.hist-time .ht{font-size:18px;font-weight:800;color:var(--navy);}
+.hist-card-main{display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer;}
+.hist-time{text-align:center;flex-shrink:0;min-width:44px;}
+.hist-time .ht{font-size:17px;font-weight:800;color:var(--navy);}
 .hist-time .hd{font-size:10px;color:var(--muted);}
 .hist-mid{flex:1;min-width:0;}
 .hist-mid .hstyle{font-size:14px;font-weight:700;color:var(--navy);}
 .hist-mid .hstaff{font-size:12px;color:var(--muted);margin-top:2px;}
 .hist-right{text-align:right;flex-shrink:0;}
-.hist-right .hq{font-size:13px;font-weight:600;color:var(--text);}
+.hist-right .hq{font-size:12px;font-weight:600;color:var(--text);}
 .hist-right .hr{font-size:13px;font-weight:700;}
+.hist-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+/* Edit modal defect grid */
+.edit-def-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:4px;}
+@media(max-width:480px){.edit-def-grid{grid-template-columns:repeat(2,1fr);}}
+.edit-def-item{display:flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 8px;}
+.edit-def-code{font-size:10px;font-weight:700;color:var(--muted);min-width:26px;flex-shrink:0;}
+.edit-def-input{width:100%;height:30px;border:1.5px solid var(--border);border-radius:6px;text-align:center;
+  font-size:13px;font-weight:700;font-family:inherit;outline:none;background:var(--card);}
+.edit-def-input:focus{border-color:var(--blue);}
+.edit-def-input.nonzero{border-color:var(--blue);background:rgba(79,110,247,0.05);color:var(--blue);}
 
 /* ===== MODAL ===== */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:5000;display:flex;
@@ -734,6 +746,10 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 
   <!-- TAB 3: HISTORY -->
   <div class="page" id="pageHistory">
+    <div class="hist-header">
+      <div class="section-title" style="margin:0;">Lịch Sử Báo Cáo</div>
+      <button class="btn btn-primary btn-sm" onclick="showAddHistModal()">➕ Thêm</button>
+    </div>
     <div id="histList" class="hist-list">
       <div class="loading-center"><div class="spinner"></div><span>Đang tải...</span></div>
     </div>
@@ -968,6 +984,47 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
       <button class="btn btn-outline" onclick="document.getElementById('importStyleModal').classList.add('hidden')">Hủy</button>
       <button class="btn btn-primary" id="confirmImportBtn" onclick="confirmImportStyles()">✅ Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Add/Edit Modal -->
+<div class="modal-overlay hidden" id="histEditModal" onclick="closeModal(event)">
+  <div class="modal-box" style="max-width:600px;" onclick="event.stopPropagation()">
+    <div class="modal-hd">
+      <div class="modal-title" id="histEditTitle">Thêm Báo Cáo</div>
+      <button class="modal-close" onclick="document.getElementById('histEditModal').classList.add('hidden')">✕</button>
+    </div>
+    <input type="hidden" id="editSubId">
+    <div class="form-row">
+      <div class="fld"><label>Thời gian ghi nhận</label><input type="datetime-local" id="editDateTime" style="height:40px;border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;width:100%;"></div>
+      <div class="fld"><label>Chuyền</label>
+        <select id="editLine" class="fld" style="height:40px;border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;background:var(--card);">
+          <option value="10">Chuyền 10</option><option value="11">Chuyền 11</option>
+          <option value="12">Chuyền 12</option><option value="13">Chuyền 13</option>
+          <option value="14">Chuyền 14</option><option value="15">Chuyền 15</option>
+          <option value="16">Chuyền 16</option><option value="17">Chuyền 17</option>
+          <option value="18">Chuyền 18</option><option value="19">Chuyền 19</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fld"><label>Mã hàng</label><select id="editStyle" style="height:40px;border:1.5px solid var(--border);border-radius:8px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;background:var(--card);width:100%;"></select></div>
+      <div class="fld"><label>Nhân viên</label><input type="text" id="editStaff" placeholder="Tên nhân viên"></div>
+    </div>
+    <div class="fld" style="margin-bottom:14px;">
+      <label>Số lượng kiểm tra (pcs)</label>
+      <input type="number" id="editInspected" min="0" placeholder="0">
+    </div>
+    <div class="section-label" style="margin-bottom:8px;">Chi tiết lỗi S01–S23</div>
+    <div class="edit-def-grid" id="editDefGrid"></div>
+    <div class="fld" style="margin-top:12px;margin-bottom:16px;">
+      <label>Ghi chú</label>
+      <textarea class="notes-area" id="editNote" rows="2" placeholder="Ghi chú (tuỳ chọn)"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="document.getElementById('histEditModal').classList.add('hidden')">Hủy</button>
+      <button class="btn btn-primary" id="histEditSaveBtn" onclick="saveHistSubmission()">💾 Lưu</button>
     </div>
   </div>
 </div>
@@ -1976,18 +2033,24 @@ function renderHistory() {
   list.innerHTML = histSubmissions.map(function(r) {
     const dt = new Date(r.created_at);
     const time = dt.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
-    const date = dt.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit'});
+    const date = dt.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'2-digit'});
     const rate = parseFloat(r.defect_rate || 0).toFixed(1);
     const rateCls = rateColorClass(rate);
-    return '<div class="hist-card" onclick="viewSubmission(\'' + r.id + '\')">' +
-      '<div class="hist-time"><div class="ht">' + time + '</div><div class="hd">' + date + '</div></div>' +
-      '<div class="hist-mid">' +
-        '<div class="hstyle"><span class="line-badge" style="margin-right:6px;">' + r.line_number + '</span>' + r.style_number + '</div>' +
-        '<div class="hstaff">' + r.staff_name + '</div>' +
+    return '<div class="hist-card">' +
+      '<div class="hist-card-main" onclick="viewSubmission(\'' + r.id + '\')">' +
+        '<div class="hist-time"><div class="ht">' + time + '</div><div class="hd">' + date + '</div></div>' +
+        '<div class="hist-mid">' +
+          '<div class="hstyle"><span class="line-badge" style="margin-right:6px;">' + r.line_number + '</span>' + r.style_number + '</div>' +
+          '<div class="hstaff">' + r.staff_name + '</div>' +
+        '</div>' +
+        '<div class="hist-right">' +
+          '<div class="hq">' + (r.total_inspected||0).toLocaleString() + ' pcs · ' + (r.total_defects||0) + ' lỗi</div>' +
+          '<div class="hr ' + rateCls + '">' + rate + '%</div>' +
+        '</div>' +
       '</div>' +
-      '<div class="hist-right">' +
-        '<div class="hq">' + (r.total_inspected||0).toLocaleString() + ' pcs</div>' +
-        '<div class="hr ' + rateCls + '">' + rate + '%</div>' +
+      '<div class="hist-actions">' +
+        '<button class="btn btn-outline btn-sm" title="Sửa" onclick="showEditHistModal(\'' + r.id + '\')">✏️</button>' +
+        '<button class="btn btn-danger btn-sm" title="Xóa" onclick="deleteSubmission(\'' + r.id + '\')">🗑</button>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -2803,6 +2866,160 @@ function renderExportDefChart(data) {
   });
 
   wrap.style.display = 'block';
+}
+
+// ===========================
+// HISTORY CRUD
+// ===========================
+function buildEditDefGrid() {
+  const grid = document.getElementById('editDefGrid');
+  if (!grid || grid.children.length > 0) return;
+  grid.innerHTML = DEFECTS.map(function(d) {
+    return '<div class="edit-def-item">' +
+      '<span class="edit-def-code ' + d.cat + '" style="color:var(--' + (d.cat==='work'?'work':d.cat==='mach'?'mach':d.cat==='matl'?'matl':'other') + ');">' + d.code + '</span>' +
+      '<input type="number" class="edit-def-input" id="edef_' + d.code + '" value="0" min="0" ' +
+        'oninput="onEditDef(\'' + d.code + '\')" onchange="onEditDef(\'' + d.code + '\')">' +
+    '</div>';
+  }).join('');
+}
+
+function onEditDef(code) {
+  const inp = document.getElementById('edef_' + code);
+  if (!inp) return;
+  const v = Math.max(0, parseInt(inp.value) || 0);
+  inp.value = v;
+  inp.className = 'edit-def-input' + (v > 0 ? ' nonzero' : '');
+}
+
+async function loadEditStyleSelect(selectedCode) {
+  const sel = document.getElementById('editStyle');
+  if (!sel) return;
+  sel.innerHTML = '';
+  try {
+    const { data, error } = await sb.from('styles').select('*').order('code');
+    const styles = (error || !data || !data.length) ? DEFAULT_STYLES : data;
+    styles.forEach(function(s) {
+      const opt = document.createElement('option');
+      opt.value = s.code; opt.textContent = s.code + ' — ' + s.name;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    DEFAULT_STYLES.forEach(function(s) {
+      const opt = document.createElement('option');
+      opt.value = s.code; opt.textContent = s.code + ' — ' + s.name;
+      sel.appendChild(opt);
+    });
+  }
+  if (selectedCode) sel.value = selectedCode;
+}
+
+function showAddHistModal() {
+  buildEditDefGrid();
+  document.getElementById('histEditTitle').textContent = 'Thêm Báo Cáo';
+  document.getElementById('editSubId').value = '';
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  document.getElementById('editDateTime').value = local;
+  document.getElementById('editLine').value = '10';
+  document.getElementById('editStaff').value = '';
+  document.getElementById('editInspected').value = '';
+  document.getElementById('editNote').value = '';
+  DEFECTS.forEach(function(d) {
+    const inp = document.getElementById('edef_' + d.code);
+    if (inp) { inp.value = 0; inp.className = 'edit-def-input'; }
+  });
+  loadEditStyleSelect(null);
+  document.getElementById('histEditModal').classList.remove('hidden');
+}
+
+function showEditHistModal(id) {
+  const sub = histSubmissions.find(function(s) { return s.id === id; });
+  if (!sub) return;
+  buildEditDefGrid();
+  document.getElementById('histEditTitle').textContent = 'Sửa Báo Cáo';
+  document.getElementById('editSubId').value = id;
+  const dt = new Date(sub.created_at);
+  const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  document.getElementById('editDateTime').value = local;
+  document.getElementById('editLine').value = sub.line_number;
+  document.getElementById('editStaff').value = sub.staff_name;
+  document.getElementById('editInspected').value = sub.total_inspected || 0;
+  document.getElementById('editNote').value = sub.note || '';
+  DEFECTS.forEach(function(d) {
+    const inp = document.getElementById('edef_' + d.code);
+    if (inp) {
+      const v = (sub.defects && sub.defects[d.code]) || 0;
+      inp.value = v;
+      inp.className = 'edit-def-input' + (v > 0 ? ' nonzero' : '');
+    }
+  });
+  loadEditStyleSelect(sub.style_number);
+  document.getElementById('histEditModal').classList.remove('hidden');
+}
+
+async function saveHistSubmission() {
+  const id = document.getElementById('editSubId').value;
+  const dateTimeVal = document.getElementById('editDateTime').value;
+  const lineNumber = document.getElementById('editLine').value;
+  const styleNumber = document.getElementById('editStyle').value;
+  const staffName = document.getElementById('editStaff').value.trim();
+  const totalInspected = parseInt(document.getElementById('editInspected').value) || 0;
+  const note = document.getElementById('editNote').value.trim();
+
+  if (!dateTimeVal || !lineNumber || !styleNumber || !staffName) { showToast('Vui lòng điền đủ thông tin', true); return; }
+  if (totalInspected < 1) { showToast('Số lượng kiểm tra phải > 0', true); return; }
+
+  const defectsObj = {};
+  let totalDefects = 0;
+  DEFECTS.forEach(function(d) {
+    const v = parseInt(document.getElementById('edef_' + d.code).value) || 0;
+    if (v > 0) defectsObj[d.code] = v;
+    totalDefects += v;
+  });
+  const defectRate = totalInspected > 0 ? parseFloat(((totalDefects / totalInspected) * 100).toFixed(2)) : 0;
+  const createdAt = new Date(dateTimeVal).toISOString();
+  const hourBlock = createdAt.slice(0, 13);
+
+  const payload = {
+    staff_name: staffName, line_number: lineNumber, style_number: styleNumber,
+    hour_block: hourBlock, total_inspected: totalInspected,
+    total_defects: totalDefects, defect_rate: defectRate,
+    defects: defectsObj, note: note || null, created_at: createdAt,
+  };
+
+  const btn = document.getElementById('histEditSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳ Đang lưu...';
+  try {
+    if (id) {
+      const { error } = await sb.from('qc_submissions').update(payload).eq('id', id);
+      if (error) throw error;
+      showToast('✅ Đã cập nhật báo cáo');
+    } else {
+      const { error } = await sb.from('qc_submissions').insert(payload);
+      if (error) throw error;
+      showToast('✅ Đã thêm báo cáo');
+    }
+    document.getElementById('histEditModal').classList.add('hidden');
+    historyLoaded = false; managerLoaded = false;
+    loadHistory();
+  } catch(e) {
+    showToast('Lỗi: ' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Lưu';
+  }
+}
+
+async function deleteSubmission(id) {
+  if (!confirm('Xóa báo cáo này? Hành động không thể hoàn tác.')) return;
+  try {
+    const { error } = await sb.from('qc_submissions').delete().eq('id', id);
+    if (error) throw error;
+    showToast('✅ Đã xóa báo cáo');
+    historyLoaded = false; managerLoaded = false;
+    loadHistory();
+  } catch(e) {
+    showToast('Lỗi: ' + e.message, true);
+  }
 }
 
 // ===========================
