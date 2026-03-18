@@ -321,6 +321,10 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 .hist-right .hq{font-size:12px;font-weight:600;color:var(--text);}
 .hist-right .hr{font-size:13px;font-weight:700;}
 .hist-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+.hist-card.disabled{opacity:0.55;background:var(--bg);}
+.hist-card.disabled .hstyle{text-decoration:line-through;color:var(--muted);}
+.hist-card.disabled .hr{color:var(--muted)!important;}
+.hist-audit{font-size:11px;color:var(--muted);margin-top:5px;padding-top:5px;border-top:1px solid var(--border);}
 /* Edit modal defect grid */
 .edit-def-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:4px;}
 @media(max-width:480px){.edit-def-grid{grid-template-columns:repeat(2,1fr);}}
@@ -1696,6 +1700,8 @@ function getFilteredData() {
   if (managerLineFilter !== 'all') {
     d = d.filter(function(r) { return String(r.line_number) === String(managerLineFilter); });
   }
+  // Exclude disabled records from dashboard metrics
+  d = d.filter(function(r) { return r.is_active !== false; });
   return d;
 }
 
@@ -2036,22 +2042,46 @@ function renderHistory() {
     const date = dt.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'2-digit'});
     const rate = parseFloat(r.defect_rate || 0).toFixed(1);
     const rateCls = rateColorClass(rate);
-    return '<div class="hist-card">' +
-      '<div class="hist-card-main" onclick="viewSubmission(\'' + r.id + '\')">' +
-        '<div class="hist-time"><div class="ht">' + time + '</div><div class="hd">' + date + '</div></div>' +
-        '<div class="hist-mid">' +
-          '<div class="hstyle"><span class="line-badge" style="margin-right:6px;">' + r.line_number + '</span>' + r.style_number + '</div>' +
-          '<div class="hstaff">' + r.staff_name + '</div>' +
-        '</div>' +
-        '<div class="hist-right">' +
-          '<div class="hq">' + (r.total_inspected||0).toLocaleString() + ' pcs · ' + (r.total_defects||0) + ' lỗi</div>' +
-          '<div class="hr ' + rateCls + '">' + rate + '%</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="hist-actions">' +
+    const isActive = r.is_active !== false;
+
+    // Audit trail text
+    var auditHtml = '';
+    if (r.last_action && r.action_by && r.action_at) {
+      const adt = new Date(r.action_at);
+      const adtStr = adt.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit'}) + ' ' +
+                     adt.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
+      const icon = r.last_action === 'deleted' ? '🚫' : r.last_action === 'restored' ? '↩️' : '✏️';
+      const verb = r.last_action === 'deleted' ? 'Đã vô hiệu hóa' : r.last_action === 'restored' ? 'Đã khôi phục' : 'Đã sửa';
+      auditHtml = '<div class="hist-audit">' + icon + ' ' + verb + ' bởi <strong>' + r.action_by + '</strong> · ' + adtStr + '</div>';
+    }
+
+    // Action buttons
+    var actionsHtml;
+    if (isActive) {
+      actionsHtml =
         '<button class="btn btn-outline btn-sm" title="Sửa" onclick="showEditHistModal(\'' + r.id + '\')">✏️</button>' +
-        '<button class="btn btn-danger btn-sm" title="Xóa" onclick="deleteSubmission(\'' + r.id + '\')">🗑</button>' +
+        '<button class="btn btn-danger btn-sm" title="Vô hiệu hóa" onclick="disableSubmission(\'' + r.id + '\')">🚫</button>';
+    } else {
+      actionsHtml =
+        '<button class="btn btn-success btn-sm" title="Khôi phục" onclick="restoreSubmission(\'' + r.id + '\')">↩️</button>';
+    }
+
+    return '<div class="hist-card' + (isActive ? '' : ' disabled') + '">' +
+      '<div class="hist-card-main" onclick="viewSubmission(\'' + r.id + '\')" style="flex-direction:column;align-items:flex-start;">' +
+        '<div style="display:flex;align-items:center;gap:12px;width:100%;">' +
+          '<div class="hist-time"><div class="ht">' + time + '</div><div class="hd">' + date + '</div></div>' +
+          '<div class="hist-mid">' +
+            '<div class="hstyle"><span class="line-badge" style="margin-right:6px;">' + r.line_number + '</span>' + r.style_number + '</div>' +
+            '<div class="hstaff">' + r.staff_name + '</div>' +
+          '</div>' +
+          '<div class="hist-right">' +
+            '<div class="hq">' + (r.total_inspected||0).toLocaleString() + ' pcs · ' + (r.total_defects||0) + ' lỗi</div>' +
+            '<div class="hr ' + rateCls + '">' + rate + '%</div>' +
+          '</div>' +
+        '</div>' +
+        (auditHtml ? '<div style="width:100%;">' + auditHtml + '</div>' : '') +
       '</div>' +
+      '<div class="hist-actions">' + actionsHtml + '</div>' +
     '</div>';
   }).join('');
 }
@@ -2980,11 +3010,13 @@ async function saveHistSubmission() {
   const createdAt = new Date(dateTimeVal).toISOString();
   const hourBlock = createdAt.slice(0, 13);
 
+  const actionBy = currentUser.display_name || currentUser.username;
   const payload = {
     staff_name: staffName, line_number: lineNumber, style_number: styleNumber,
     hour_block: hourBlock, total_inspected: totalInspected,
     total_defects: totalDefects, defect_rate: defectRate,
     defects: defectsObj, note: note || null, created_at: createdAt,
+    is_active: true, last_action: 'edited', action_by: actionBy, action_at: new Date().toISOString(),
   };
 
   const btn = document.getElementById('histEditSaveBtn');
@@ -3009,12 +3041,36 @@ async function saveHistSubmission() {
   }
 }
 
-async function deleteSubmission(id) {
-  if (!confirm('Xóa báo cáo này? Hành động không thể hoàn tác.')) return;
+async function disableSubmission(id) {
+  if (!confirm('Vô hiệu hóa báo cáo này? Dữ liệu vẫn được giữ lại.')) return;
+  const actionBy = currentUser.display_name || currentUser.username;
   try {
-    const { error } = await sb.from('qc_submissions').delete().eq('id', id);
+    const { error } = await sb.from('qc_submissions').update({
+      is_active: false,
+      last_action: 'deleted',
+      action_by: actionBy,
+      action_at: new Date().toISOString(),
+    }).eq('id', id);
     if (error) throw error;
-    showToast('✅ Đã xóa báo cáo');
+    showToast('✅ Đã vô hiệu hóa báo cáo');
+    historyLoaded = false; managerLoaded = false;
+    loadHistory();
+  } catch(e) {
+    showToast('Lỗi: ' + e.message, true);
+  }
+}
+
+async function restoreSubmission(id) {
+  const actionBy = currentUser.display_name || currentUser.username;
+  try {
+    const { error } = await sb.from('qc_submissions').update({
+      is_active: true,
+      last_action: 'restored',
+      action_by: actionBy,
+      action_at: new Date().toISOString(),
+    }).eq('id', id);
+    if (error) throw error;
+    showToast('✅ Đã khôi phục báo cáo');
     historyLoaded = false; managerLoaded = false;
     loadHistory();
   } catch(e) {
