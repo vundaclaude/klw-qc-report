@@ -697,6 +697,8 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
       <div class="admin-section-title">
         <span>🏷️ Quản lý Mã Hàng</span>
         <button class="btn btn-primary btn-sm" onclick="showAddStyleModal()">➕ Thêm Mã Hàng</button>
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('styleExcelInput').click()">📥 Import Excel</button>
+        <input type="file" id="styleExcelInput" accept=".xlsx,.xls" style="display:none" onchange="importStylesFromExcel(this)"/>
       </div>
       <div class="tbl-wrap">
         <table class="data-table">
@@ -783,6 +785,21 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
       <button class="btn btn-outline" onclick="document.getElementById('addStyleModal').classList.add('hidden')">Hủy</button>
       <button class="btn btn-primary" onclick="addStyle()">Thêm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Styles Modal -->
+<div class="modal-overlay hidden" id="importStyleModal" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:480px">
+    <div class="modal-hd">
+      <div class="modal-title">📥 Import Mã Hàng từ Excel</div>
+      <button class="modal-close" onclick="document.getElementById('importStyleModal').classList.add('hidden')">✕</button>
+    </div>
+    <div id="importPreviewBody"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+      <button class="btn btn-outline" onclick="document.getElementById('importStyleModal').classList.add('hidden')">Hủy</button>
+      <button class="btn btn-primary" id="confirmImportBtn" onclick="confirmImportStyles()">✅ Import</button>
     </div>
   </div>
 </div>
@@ -908,8 +925,8 @@ function showLoginScreen() {
 }
 
 async function doLogin() {
-  const username = document.getElementById('loginUser').value.trim();
-  const password = document.getElementById('loginPass').value;
+  const username = document.getElementById('loginUser').value.trim().toLowerCase();
+  const password = document.getElementById('loginPass').value.toLowerCase();
   const errEl = document.getElementById('loginError');
   errEl.style.display = 'none';
 
@@ -925,13 +942,13 @@ async function doLogin() {
   btn.disabled = true;
 
   try {
-    const { data, error } = await sb.from('users')
+    // Fetch by username (case-insensitive), then compare password client-side
+    const { data: users, error } = await sb.from('users')
       .select('*')
-      .eq('username', username)
-      .eq('password', password)
-      .maybeSingle();
+      .ilike('username', username);
 
     if (error) throw error;
+    const data = (users || []).find(u => u.password.toLowerCase() === password);
     if (!data) {
       errEl.textContent = 'Sai tên đăng nhập hoặc mật khẩu';
       errEl.style.display = 'block';
@@ -1800,20 +1817,28 @@ function showAddUserModal() {
 }
 
 async function createUser() {
-  const username = document.getElementById('newUsername').value.trim();
-  const password = document.getElementById('newPassword').value.trim();
+  const username = document.getElementById('newUsername').value.trim().toLowerCase();
+  const password = document.getElementById('newPassword').value.trim().toLowerCase();
   const display_name = document.getElementById('newDisplayName').value.trim();
   const role = document.getElementById('newRole').value;
   if (!username || !password) { showToast('Vui lòng nhập đủ thông tin', true); return; }
-  try {
-    const { error } = await sb.from('users').insert({username, password, display_name, role});
-    if (error) throw error;
-    document.getElementById('addUserModal').classList.add('hidden');
-    showToast('✅ Tài khoản đã được tạo!');
-    loadUsers();
-  } catch(e) {
-    showToast('Lỗi: ' + e.message, true);
+  let lastErr;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const { error } = await sb.from('users').insert({username, password, display_name, role});
+      if (error) throw error;
+      document.getElementById('addUserModal').classList.add('hidden');
+      showToast('✅ Tài khoản đã được tạo!');
+      loadUsers();
+      return;
+    } catch(e) {
+      lastErr = e;
+      if (attempt === 0 && e.message === 'Failed to fetch') await new Promise(r => setTimeout(r, 1500));
+      else break;
+    }
   }
+  if (lastErr.message === 'Failed to fetch') showToast('Lỗi mạng — vui lòng thử lại', true);
+  else showToast('Lỗi: ' + lastErr.message, true);
 }
 
 function showChangePwModal(userId, username) {
@@ -1826,7 +1851,7 @@ function showChangePwModal(userId, username) {
 
 async function changePassword() {
   const userId = document.getElementById('changePwUserId').value;
-  const pw = document.getElementById('newPwInput').value.trim();
+  const pw = document.getElementById('newPwInput').value.trim().toLowerCase();
   if (!pw) { showToast('Nhập mật khẩu mới', true); return; }
   try {
     const { error } = await sb.from('users').update({password: pw}).eq('id', userId);
@@ -1887,6 +1912,90 @@ function renderStylesAdmin(styles) {
       '</td>' +
     '</tr>';
   }).join('');
+}
+
+// ── Import styles from Excel ──
+let _importCodes = [];
+
+function importStylesFromExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = ''; // reset so same file can be re-selected
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+      // Collect non-empty values from column A, skip header row
+      const codes = rows.slice(1)
+        .map(r => String(r[0] || '').trim())
+        .filter(c => c.length > 0);
+
+      if (!codes.length) { showToast('Không tìm thấy mã hàng trong file', true); return; }
+
+      // Fetch existing codes from DB
+      const { data: existing } = await sb.from('styles').select('code');
+      const existingSet = new Set((existing || []).map(s => s.code));
+
+      const newCodes = codes.filter(c => !existingSet.has(c));
+      const dupCodes = codes.filter(c => existingSet.has(c));
+
+      _importCodes = newCodes;
+
+      // Build preview
+      let html = `<div style="margin-bottom:12px;font-size:13px;color:var(--muted)">
+        Tìm thấy <strong style="color:var(--text)">${codes.length}</strong> mã hàng trong file
+      </div>`;
+
+      if (newCodes.length) {
+        html += `<div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--green)">
+          ✅ Sẽ thêm mới (${newCodes.length})
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+          ${newCodes.map(c=>`<span style="background:#f0faf4;border:1px solid #b7e4c7;border-radius:6px;padding:3px 10px;font-size:13px;font-weight:600;color:#1d6636">${c}</span>`).join('')}
+        </div>`;
+      }
+      if (dupCodes.length) {
+        html += `<div style="margin-bottom:8px;font-size:12px;font-weight:700;color:var(--muted)">
+          ⏭ Đã tồn tại, bỏ qua (${dupCodes.length})
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${dupCodes.map(c=>`<span style="background:#f8f9fc;border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;color:var(--muted)">${c}</span>`).join('')}
+        </div>`;
+      }
+      if (!newCodes.length) {
+        html += `<div style="text-align:center;padding:16px;color:var(--muted);font-size:13px">Tất cả mã hàng đã tồn tại trong hệ thống.</div>`;
+      }
+
+      document.getElementById('importPreviewBody').innerHTML = html;
+      document.getElementById('confirmImportBtn').disabled = newCodes.length === 0;
+      document.getElementById('confirmImportBtn').textContent = newCodes.length ? `✅ Thêm ${newCodes.length} mã hàng` : 'Không có gì mới';
+      document.getElementById('importStyleModal').classList.remove('hidden');
+    } catch(err) {
+      showToast('Lỗi đọc file: ' + err.message, true);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function confirmImportStyles() {
+  if (!_importCodes.length) return;
+  const btn = document.getElementById('confirmImportBtn');
+  btn.disabled = true; btn.textContent = '⏳ Đang import...';
+  try {
+    const rows = _importCodes.map(code => ({code, name: code, active: true}));
+    const { error } = await sb.from('styles').insert(rows);
+    if (error) throw error;
+    document.getElementById('importStyleModal').classList.add('hidden');
+    showToast(`✅ Đã thêm ${_importCodes.length} mã hàng!`);
+    _importCodes = [];
+    loadStylesAdmin();
+  } catch(err) {
+    showToast('Lỗi: ' + err.message, true);
+    btn.disabled = false; btn.textContent = `✅ Thêm ${_importCodes.length} mã hàng`;
+  }
 }
 
 function showAddStyleModal() {
