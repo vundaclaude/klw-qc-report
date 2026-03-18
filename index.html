@@ -273,9 +273,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 .filter-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
 .filter-select{height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;
   font-size:13px;font-family:inherit;outline:none;background:var(--card);cursor:pointer;}
-.date-range-badge{display:inline-block;background:var(--card);border:1px solid var(--border);
+.date-range-badge{width:100%;background:var(--card);border:1px solid var(--border);
   border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--navy);
-  margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);}
+  box-shadow:0 2px 8px rgba(0,0,0,0.07);text-align:center;}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 @media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
 .kpi-card{background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);
@@ -645,10 +645,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
         <option value="18">Chuyền 18</option>
         <option value="19">Chuyền 19</option>
       </select>
+      <!-- Date range badge inside sticky bar — always visible -->
+      <div class="date-range-badge" id="dateRangeLabel"></div>
     </div>
-
-    <!-- Date range badge — always visible below filter bar -->
-    <div class="date-range-badge" id="dateRangeLabel"></div>
 
     <div class="kpi-grid">
       <div class="kpi-card blue"><div class="ki">📋</div><div class="kv" id="kpi1">0</div><div class="kl">Lần kiểm tra</div></div>
