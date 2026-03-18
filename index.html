@@ -446,6 +446,71 @@
     .error-bar-wrap { background: #f0f2f8; border-radius: 4px; height: 8px; width: 120px; display: inline-block; vertical-align: middle; margin-left: 8px; }
     .error-bar { background: var(--red); border-radius: 4px; height: 8px; transition: width 0.5s; }
 
+    /* ── LOGIN OVERLAY ── */
+    .login-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .login-card {
+      background: white; border-radius: 20px; padding: 40px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;
+    }
+    .login-logo { font-size: 28px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+    .login-logo span { color: var(--blue); }
+    .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+    .login-field { margin-bottom: 14px; text-align: left; }
+    .login-field label { font-size: 13px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 6px; }
+    .login-field input {
+      width: 100%; padding: 12px 16px; border: 2px solid var(--border);
+      border-radius: 10px; font-size: 15px; font-family: inherit; transition: border 0.2s;
+    }
+    .login-field input:focus { outline: none; border-color: var(--blue); }
+    .login-btn {
+      width: 100%; padding: 14px; background: var(--blue); color: white;
+      border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: background 0.2s; margin-top: 8px;
+    }
+    .login-btn:hover { background: var(--blue2); }
+    .login-btn:disabled { background: #aab4e8; cursor: not-allowed; }
+    .login-error { color: var(--red); font-size: 13px; margin-top: 12px; min-height: 20px; font-weight: 600; }
+
+    /* ── NAVBAR USER INFO ── */
+    .navbar-user { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .navbar-user .user-name { color: rgba(255,255,255,0.85); font-size: 14px; font-weight: 600; white-space: nowrap; }
+    .role-badge {
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+      background: rgba(79,110,247,0.4); color: #c5d0ff; white-space: nowrap;
+    }
+    .role-badge.admin   { background: rgba(231,76,60,0.3);  color: #ffb3ae; }
+    .role-badge.manager { background: rgba(39,174,96,0.3);  color: #a8e6c1; }
+    .role-badge.staff   { background: rgba(79,110,247,0.4); color: #c5d0ff; }
+    .logout-btn {
+      padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,0.18); color: white; }
+
+    /* ── ACCOUNT MANAGEMENT ── */
+    .user-form { display: flex; flex-direction: column; gap: 14px; }
+    .form-row { display: flex; flex-direction: column; gap: 6px; }
+    .form-row label { font-size: 13px; font-weight: 600; color: var(--muted); }
+    .form-row input, .form-row select {
+      padding: 10px 14px; border: 2px solid var(--border);
+      border-radius: 10px; font-size: 14px; font-family: inherit; transition: border 0.2s;
+    }
+    .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--blue); }
+    .btn-sm {
+      padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 700;
+      cursor: pointer; border: none; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-sm.blue { background: #eef1ff; color: var(--blue); }
+    .btn-sm.blue:hover { background: var(--blue); color: white; }
+    .btn-sm.red { background: #fef0ee; color: var(--red); }
+    .btn-sm.red:hover { background: var(--red); color: white; }
+
     /* ── BOTTOM NAV (mobile only) ── */
     .bottom-nav {
       display: none;
@@ -630,6 +695,24 @@
 </head>
 <body>
 
+  <!-- ── LOGIN OVERLAY ── -->
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+      <div class="login-logo">🏭 KLW <span>Vietnam</span></div>
+      <p class="login-sub">Hệ Thống Quản Lý Chất Lượng QC</p>
+      <div class="login-field">
+        <label>Tên đăng nhập</label>
+        <input type="text" id="loginUsername" placeholder="Nhập tên đăng nhập..." autocomplete="username"/>
+      </div>
+      <div class="login-field">
+        <label>Mật khẩu</label>
+        <input type="password" id="loginPassword" placeholder="Nhập mật khẩu..." autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">Đăng Nhập</button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+
   <!-- ── NAVBAR ── -->
   <nav class="navbar">
     <div class="navbar-brand">🏭 KLW <span>Vietnam</span></div>
@@ -637,6 +720,12 @@
       <button class="nav-tab active" onclick="showPage('input')">✏️ Nhập Báo Cáo</button>
       <button class="nav-tab" onclick="showPage('manager')">📊 Dashboard Quản Lý</button>
       <button class="nav-tab" onclick="showPage('history')">📂 Lịch Sử Báo Cáo</button>
+      <button class="nav-tab" onclick="showPage('accounts')" style="display:none">⚙️ Tài Khoản</button>
+    </div>
+    <div class="navbar-user" id="navbarUser" style="display:none">
+      <span class="user-name" id="navUserName"></span>
+      <span class="role-badge" id="navRoleBadge"></span>
+      <button class="logout-btn" onclick="logout()">Đăng xuất</button>
     </div>
   </nav>
 
@@ -651,6 +740,9 @@
       </button>
       <button class="bnav-btn" id="bnav-history" onclick="showPage('history')">
         <span class="bnav-icon">📂</span>Lịch Sử
+      </button>
+      <button class="bnav-btn" id="bnav-accounts" onclick="showPage('accounts')" style="display:none">
+        <span class="bnav-icon">⚙️</span>Tài Khoản
       </button>
     </div>
   </div>
@@ -788,6 +880,35 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════════ -->
+  <!-- PAGE 4: ACCOUNT MANAGEMENT (admin only)  -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="page" id="pageAccounts">
+    <div class="page-title">Quản Lý Tài Khoản</div>
+    <div class="page-sub">Tạo, xóa và đổi mật khẩu tài khoản người dùng</div>
+    <div style="margin-bottom:16px">
+      <button class="btn-primary" onclick="showAddUserModal()">➕ Thêm Tài Khoản</button>
+    </div>
+    <div class="card">
+      <div class="card-title">👥 Danh Sách Tài Khoản</div>
+      <div class="table-wrap">
+        <table id="userTable">
+          <thead>
+            <tr>
+              <th style="width:44px" class="center">#</th>
+              <th>Tên đăng nhập</th>
+              <th>Tên hiển thị</th>
+              <th class="center">Vai trò</th>
+              <th class="center">Ngày tạo</th>
+              <th class="center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody"><tr><td colspan="6" class="center muted" style="padding:24px">Đang tải...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL -->
   <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
     <div class="modal">
@@ -871,6 +992,170 @@
     setTimeout(()=>{ t.className='toast'; }, 3500);
   }
 
+  // ── Auth ──
+  let currentUser = null;
+
+  function checkAuth() {
+    const stored = sessionStorage.getItem('klw_user');
+    if (stored) {
+      currentUser = JSON.parse(stored);
+      document.getElementById('loginOverlay').style.display = 'none';
+      initApp();
+    }
+  }
+
+  async function doLogin() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+    if (!username || !password) { errEl.textContent = '⚠️ Vui lòng nhập đủ thông tin.'; return; }
+    btn.disabled = true; btn.textContent = 'Đang đăng nhập...'; errEl.textContent = '';
+    const { data, error } = await sb.from('users').select('*').eq('username', username).eq('password', password).single();
+    btn.disabled = false; btn.textContent = 'Đăng Nhập';
+    if (error || !data) { errEl.textContent = '❌ Tên đăng nhập hoặc mật khẩu không đúng.'; return; }
+    currentUser = data;
+    sessionStorage.setItem('klw_user', JSON.stringify(data));
+    document.getElementById('loginOverlay').style.display = 'none';
+    initApp();
+  }
+
+  function logout() {
+    sessionStorage.removeItem('klw_user');
+    location.reload();
+  }
+
+  function initApp() {
+    const displayName = currentUser.display_name || currentUser.username;
+    document.getElementById('navUserName').textContent = displayName;
+    const roleBadge = document.getElementById('navRoleBadge');
+    const roleLabels = { admin: 'Quản Trị', manager: 'Quản Lý', staff: 'Nhân Viên' };
+    roleBadge.textContent = roleLabels[currentUser.role] || currentUser.role;
+    roleBadge.className = 'role-badge ' + currentUser.role;
+    document.getElementById('navbarUser').style.display = 'flex';
+
+    const canInput   = currentUser.role === 'staff'   || currentUser.role === 'admin';
+    const canManager = currentUser.role === 'manager'  || currentUser.role === 'admin';
+    const isAdmin    = currentUser.role === 'admin';
+
+    const tabs = document.querySelectorAll('.nav-tab');
+    tabs[0].style.display = canInput   ? '' : 'none';
+    tabs[1].style.display = canManager ? '' : 'none';
+    tabs[2].style.display = canManager ? '' : 'none';
+    if (tabs[3]) tabs[3].style.display = isAdmin ? '' : 'none';
+
+    document.getElementById('bnav-input').style.display    = canInput   ? '' : 'none';
+    document.getElementById('bnav-manager').style.display  = canManager ? '' : 'none';
+    document.getElementById('bnav-history').style.display  = canManager ? '' : 'none';
+    document.getElementById('bnav-accounts').style.display = isAdmin    ? '' : 'none';
+
+    if (canInput) {
+      const sn = document.getElementById('staffName');
+      sn.value = currentUser.display_name || currentUser.username;
+      if (currentUser.role === 'staff') {
+        sn.readOnly = true; sn.style.background = '#f8f9fc'; sn.style.color = '#666';
+      }
+    }
+
+    if (canInput) showPage('input');
+    else if (canManager) showPage('manager');
+    else showPage('accounts');
+  }
+
+  // ── Account management ──
+  async function loadUsers() {
+    const { data, error } = await sb.from('users').select('*').order('created_at');
+    if (error || !data) return;
+    const roleLabels = { admin: '🔴 Quản Trị', manager: '🟢 Quản Lý', staff: '🔵 Nhân Viên' };
+    const tbody = document.getElementById('userTableBody');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="6" class="center muted" style="padding:24px">Chưa có tài khoản nào.</td></tr>'; return; }
+    tbody.innerHTML = data.map((u, idx) => {
+      const dt = new Date(u.created_at).toLocaleDateString('vi-VN');
+      const isSelf = u.id === currentUser.id;
+      return `<tr>
+        <td class="center muted">${idx+1}</td>
+        <td class="bold">${u.username}${isSelf ? ' <span style="font-size:11px;color:var(--blue)">(bạn)</span>' : ''}</td>
+        <td>${u.display_name || '–'}</td>
+        <td class="center">${roleLabels[u.role] || u.role}</td>
+        <td class="center muted">${dt}</td>
+        <td class="center">
+          <div style="display:flex;gap:6px;justify-content:center">
+            <button class="btn-sm blue" onclick="showChangePwModal('${u.id}','${u.username}')">🔑 Đổi MK</button>
+            ${!isSelf ? `<button class="btn-sm red" onclick="deleteUser('${u.id}','${u.username}')">🗑 Xóa</button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function showAddUserModal() {
+    document.getElementById('modalTitle').textContent = '➕ Thêm Tài Khoản Mới';
+    document.getElementById('modalBody').innerHTML = `
+      <div class="user-form">
+        <div class="form-row"><label>Tên đăng nhập *</label><input type="text" id="newUsername" placeholder="vd: nguyen_van_a"/></div>
+        <div class="form-row"><label>Tên hiển thị</label><input type="text" id="newDisplayName" placeholder="vd: Nguyễn Văn A"/></div>
+        <div class="form-row"><label>Mật khẩu *</label><input type="password" id="newPassword" placeholder="Nhập mật khẩu..."/></div>
+        <div class="form-row"><label>Vai trò *</label>
+          <select id="newRole">
+            <option value="staff">🔵 Nhân Viên (Staff)</option>
+            <option value="manager">🟢 Quản Lý (Manager)</option>
+            <option value="admin">🔴 Quản Trị (Admin)</option>
+          </select>
+        </div>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn-primary" onclick="createUser()">✅ Tạo Tài Khoản</button>
+        </div>
+      </div>`;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  async function createUser() {
+    const username    = document.getElementById('newUsername').value.trim();
+    const displayName = document.getElementById('newDisplayName').value.trim();
+    const password    = document.getElementById('newPassword').value;
+    const role        = document.getElementById('newRole').value;
+    if (!username || !password) { showToast('⚠️ Vui lòng nhập tên đăng nhập và mật khẩu!', true); return; }
+    const { error } = await sb.from('users').insert({ username, display_name: displayName||null, password, role });
+    if (error) { showToast('❌ ' + (error.message.includes('unique') ? 'Tên đăng nhập đã tồn tại.' : error.message), true); return; }
+    closeModal();
+    showToast('✅ Tạo tài khoản thành công!');
+    loadUsers();
+  }
+
+  function showChangePwModal(userId, username) {
+    document.getElementById('modalTitle').textContent = `🔑 Đổi Mật Khẩu – ${username}`;
+    document.getElementById('modalBody').innerHTML = `
+      <div class="user-form">
+        <div class="form-row"><label>Mật khẩu mới *</label><input type="password" id="newPw" placeholder="Nhập mật khẩu mới..."/></div>
+        <div class="form-row"><label>Xác nhận mật khẩu *</label><input type="password" id="confirmPw" placeholder="Nhập lại mật khẩu..."/></div>
+        <div style="text-align:right;margin-top:8px">
+          <button class="btn-primary" onclick="changePassword('${userId}')">✅ Cập Nhật</button>
+        </div>
+      </div>`;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  async function changePassword(userId) {
+    const newPw = document.getElementById('newPw').value;
+    const confirmPw = document.getElementById('confirmPw').value;
+    if (!newPw) { showToast('⚠️ Vui lòng nhập mật khẩu mới!', true); return; }
+    if (newPw !== confirmPw) { showToast('⚠️ Mật khẩu xác nhận không khớp!', true); return; }
+    const { error } = await sb.from('users').update({ password: newPw }).eq('id', userId);
+    if (error) { showToast('❌ ' + error.message, true); return; }
+    if (userId === currentUser.id) {
+      currentUser.password = newPw;
+      sessionStorage.setItem('klw_user', JSON.stringify(currentUser));
+    }
+    closeModal(); showToast('✅ Đổi mật khẩu thành công!');
+  }
+
+  async function deleteUser(userId, username) {
+    if (!confirm(`Bạn có chắc muốn xóa tài khoản "${username}"?`)) return;
+    const { error } = await sb.from('users').delete().eq('id', userId);
+    if (error) { showToast('❌ ' + error.message, true); return; }
+    showToast('✅ Đã xóa tài khoản!'); loadUsers();
+  }
+
   // ── Page navigation ──
   let managerLoaded = false, historyLoaded = false;
 
@@ -879,12 +1164,13 @@
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.bnav-btn').forEach(t => t.classList.remove('active'));
     document.getElementById('page'+page.charAt(0).toUpperCase()+page.slice(1)).classList.add('active');
-    const idx = page==='input'?0:page==='manager'?1:2;
+    const idx = page==='input'?0:page==='manager'?1:page==='history'?2:3;
     document.querySelectorAll('.nav-tab')[idx].classList.add('active');
     const bnavId = 'bnav-'+page;
     if (document.getElementById(bnavId)) document.getElementById(bnavId).classList.add('active');
-    if (page === 'manager' && !managerLoaded) { loadManager(); managerLoaded = true; }
-    if (page === 'history' && !historyLoaded) { loadHistory(); historyLoaded = true; }
+    if (page === 'manager'  && !managerLoaded)  { loadManager(); managerLoaded = true; }
+    if (page === 'history'  && !historyLoaded)  { loadHistory(); historyLoaded = true; }
+    if (page === 'accounts') loadUsers();
     window.scrollTo(0,0);
   }
 
@@ -957,6 +1243,9 @@
     congDoan.forEach((_,i)=>{ loaiLoi.forEach((_,j)=>{ document.getElementById(`inp_${i}_${j}`).value=0; }); document.getElementById(`rt_${i}`).textContent=0; });
     loaiLoi.forEach((_,j)=>{ document.getElementById(`ct_${j}`).textContent=0; });
     document.getElementById("grandTotal").textContent=0;
+    if (currentUser) {
+      document.getElementById('staffName').value = currentUser.display_name || currentUser.username;
+    }
     document.getElementById("inputSection").style.display="block";
     document.getElementById("submitDashboard").style.display="none";
     window.scrollTo(0,0);
@@ -1190,6 +1479,9 @@
 
     XLSX.writeFile(wb,`KLW_QC_Summary_${new Date().toLocaleDateString('vi-VN').replace(/\//g,'-')}.xlsx`);
   }
+
+  // ── Init ──
+  checkAuth();
 </script>
 </body>
 </html>
