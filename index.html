@@ -41,7 +41,8 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 
 /* ===== NAVBAR ===== */
 #navbar{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);
-  padding:0 20px;display:flex;align-items:center;height:72px;gap:12px;}
+  padding:0 20px;display:flex;align-items:center;height:72px;gap:12px;
+  position:fixed;top:0;left:0;right:0;z-index:100;}
 .nav-brand{display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0;gap:1px;}
 .nav-brand-title{font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.3px;}
 .nav-brand-title span{color:var(--blue);}
@@ -75,7 +76,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 
 /* ===== MAIN LAYOUT ===== */
 #app{display:none;}
-#app.visible{display:block;}
+#app.visible{display:block;padding-top:72px;}
 .page{display:none;padding:20px;max-width:1100px;margin:0 auto;}
 .page.active{display:block;}
 @media(max-width:640px){
@@ -654,14 +655,21 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
       <div class="kpi-card orange"><div class="ki">📉</div><div class="kv" id="kpi4">0%</div><div class="kl">Tỷ lệ lỗi TB</div></div>
     </div>
 
+    <!-- Chart 1: S01-S23 full width -->
+    <div class="chart-card" style="margin-bottom:16px;">
+      <h3>Top lỗi theo loại (S01–S23)</h3>
+      <canvas id="chartDef" height="120"></canvas>
+    </div>
+
+    <!-- Chart 2+3: side by side -->
     <div class="charts-row">
       <div class="chart-card">
         <h3>Tỷ lệ lỗi theo Chuyền</h3>
         <canvas id="chartLine" height="200"></canvas>
       </div>
       <div class="chart-card">
-        <h3>Top lỗi theo loại</h3>
-        <canvas id="chartDef" height="200"></canvas>
+        <h3>Lỗi theo nhóm</h3>
+        <canvas id="chartCat" height="200"></canvas>
       </div>
     </div>
 
@@ -913,6 +921,7 @@ let managerDateFilter = 'all';
 let managerLineFilter = 'all';
 let chartLineInst = null;
 let chartDefInst = null;
+let chartCatInst = null;
 let histSubmissions = [];
 let currentHistSubmission = null;
 
@@ -1506,6 +1515,7 @@ function renderManager() {
 
   renderLineChart(data);
   renderDefChart(data);
+  renderCatChart(data);
   renderLineTable(data);
   renderRecentTable(data);
 }
@@ -1607,6 +1617,45 @@ function renderDefChart(data) {
     const d = DEFECTS[idx];
     showToast(d.code + ': ' + d.vn + ' (' + totals[d.code] + ' lỗi)');
   }, {passive: false});
+}
+
+function renderCatChart(data) {
+  const canvas = document.getElementById('chartCat');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (chartCatInst) { chartCatInst.destroy(); chartCatInst = null; }
+
+  const cats = [
+    {key:'work', label:'Kỹ năng', color:'#e74c3c'},
+    {key:'mach', label:'Máy',     color:'#8e44ad'},
+    {key:'matl', label:'Vật liệu',color:'#e67e22'},
+    {key:'other',label:'Khác',    color:'#95a5a6'},
+  ];
+  const totals = {work:0, mach:0, matl:0, other:0};
+  data.forEach(function(r) {
+    if (!r.defects) return;
+    Object.keys(r.defects).forEach(function(code) {
+      const d = DEFECTS.find(function(x) { return x.code === code; });
+      if (d) totals[d.cat] += r.defects[code];
+    });
+  });
+
+  chartCatInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: cats.map(function(c) { return c.label; }),
+      datasets: [{
+        data: cats.map(function(c) { return totals[c.key]; }),
+        backgroundColor: cats.map(function(c) { return c.color; }),
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {legend:{display:false}},
+      scales: {y:{beginAtZero:true}}
+    }
+  });
 }
 
 function renderLineTable(data) {
