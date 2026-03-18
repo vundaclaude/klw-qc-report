@@ -1610,8 +1610,7 @@ function renderDefChart(data) {
   // Mobile touch support
   canvas.addEventListener('touchend', function(e) {
     e.preventDefault();
-    const touch = e.changedTouches[0];
-    const pts = chartDefInst.getElementsAtEventForMode(touch, 'nearest', {intersect: true}, false);
+    const pts = chartDefInst.getElementsAtEventForMode(e, 'nearest', {intersect: true}, false);
     if (!pts.length) return;
     const idx = pts[0].index;
     const d = DEFECTS[idx];
