@@ -260,7 +260,13 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
   letter-spacing:0.5px;margin-bottom:8px;}
 
 /* ===== TAB 2 — DASHBOARD ===== */
-.filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;align-items:center;}
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  position:sticky;top:72px;z-index:50;
+  background:var(--bg);
+  margin:-20px -20px 20px;padding:12px 20px;
+  border-bottom:1px solid var(--border);
+  box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+@media(max-width:640px){.filter-bar{top:72px;margin:-12px -12px 16px;padding:10px 12px;}}
 .filter-btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);
   font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text);transition:all 0.2s;}
 .filter-btn:hover{border-color:var(--blue);color:var(--blue);}
