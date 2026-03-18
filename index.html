@@ -273,13 +273,9 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 .filter-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;}
 .filter-select{height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;
   font-size:13px;font-family:inherit;outline:none;background:var(--card);cursor:pointer;}
-.filter-popup-btn{margin-left:auto;}
-.filter-popup{background:var(--card);border:1px solid var(--border);border-radius:12px;
-  padding:12px 16px;margin-bottom:16px;box-shadow:0 4px 16px rgba(0,0,0,0.1);
-  display:flex;flex-direction:column;gap:10px;}
-.filter-popup.hidden{display:none;}
-.filter-popup-row{display:flex;align-items:center;gap:10px;}
-.filter-popup-label{font-size:16px;}
+.date-range-badge{display:inline-block;background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--navy);
+  margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.07);}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
 @media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
 .kpi-card{background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);
@@ -628,39 +624,31 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
   <!-- TAB 2: DASHBOARD -->
   <div class="page" id="pageManager">
     <div class="filter-bar">
-      <div style="display:flex;gap:6px;" id="dateFilterBtns">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;" id="dateFilterBtns">
         <button class="filter-btn active" onclick="setDateFilter('all',this)">Tất cả</button>
         <button class="filter-btn" onclick="setDateFilter('today',this)">Hôm nay</button>
         <button class="filter-btn" onclick="setDateFilter('7d',this)">7 ngày</button>
+        <button class="filter-btn" onclick="setDateFilter('14d',this)">14 ngày</button>
         <button class="filter-btn" onclick="setDateFilter('30d',this)">30 ngày</button>
         <button class="filter-btn" onclick="refreshDashboard(this)" title="Tải lại dữ liệu">🔄</button>
       </div>
-      <button class="filter-btn filter-popup-btn" onclick="toggleFilterPopup()" id="filterPopupBtn" title="Xem chi tiết bộ lọc">⚙️</button>
+      <select class="filter-select" id="lineFilterSel" onchange="setLineFilter(this.value)" style="margin-left:auto;">
+        <option value="all">Tất cả chuyền</option>
+        <option value="10">Chuyền 10</option>
+        <option value="11">Chuyền 11</option>
+        <option value="12">Chuyền 12</option>
+        <option value="13">Chuyền 13</option>
+        <option value="14">Chuyền 14</option>
+        <option value="15">Chuyền 15</option>
+        <option value="16">Chuyền 16</option>
+        <option value="17">Chuyền 17</option>
+        <option value="18">Chuyền 18</option>
+        <option value="19">Chuyền 19</option>
+      </select>
     </div>
 
-    <!-- Filter popup -->
-    <div class="filter-popup hidden" id="filterPopup">
-      <div class="filter-popup-row">
-        <span class="filter-popup-label">📅</span>
-        <span id="dateRangeLabel" style="font-size:13px;font-weight:600;color:var(--navy);flex:1;"></span>
-      </div>
-      <div class="filter-popup-row">
-        <span class="filter-popup-label">🏭</span>
-        <select class="filter-select" id="lineFilterSel" onchange="setLineFilter(this.value)" style="flex:1;">
-          <option value="all">Tất cả chuyền</option>
-          <option value="10">Chuyền 10</option>
-          <option value="11">Chuyền 11</option>
-          <option value="12">Chuyền 12</option>
-          <option value="13">Chuyền 13</option>
-          <option value="14">Chuyền 14</option>
-          <option value="15">Chuyền 15</option>
-          <option value="16">Chuyền 16</option>
-          <option value="17">Chuyền 17</option>
-          <option value="18">Chuyền 18</option>
-          <option value="19">Chuyền 19</option>
-        </select>
-      </div>
-    </div>
+    <!-- Date range badge — always visible below filter bar -->
+    <div class="date-range-badge" id="dateRangeLabel"></div>
 
     <div class="kpi-grid">
       <div class="kpi-card blue"><div class="ki">📋</div><div class="kv" id="kpi1">0</div><div class="kl">Lần kiểm tra</div></div>
@@ -1491,6 +1479,9 @@ function getFilteredData() {
   } else if (managerDateFilter === '7d') {
     const cutoff = new Date(now.getTime() - 7 * 86400000).toISOString();
     d = d.filter(function(r) { return r.created_at >= cutoff; });
+  } else if (managerDateFilter === '14d') {
+    const cutoff = new Date(now.getTime() - 14 * 86400000).toISOString();
+    d = d.filter(function(r) { return r.created_at >= cutoff; });
   } else if (managerDateFilter === '30d') {
     const cutoff = new Date(now.getTime() - 30 * 86400000).toISOString();
     d = d.filter(function(r) { return r.created_at >= cutoff; });
@@ -1695,20 +1686,15 @@ function updateDateRangeLabel() {
   } else if (managerDateFilter === '7d') {
     const from = new Date(now.getTime() - 7 * 86400000);
     el.textContent = '📅 ' + fmt(from) + ' – ' + fmt(now);
+  } else if (managerDateFilter === '14d') {
+    const from = new Date(now.getTime() - 14 * 86400000);
+    el.textContent = '📅 ' + fmt(from) + ' – ' + fmt(now);
   } else if (managerDateFilter === '30d') {
     const from = new Date(now.getTime() - 30 * 86400000);
     el.textContent = '📅 ' + fmt(from) + ' – ' + fmt(now);
   } else {
     el.textContent = '📅 Tất cả dữ liệu';
   }
-}
-
-function toggleFilterPopup() {
-  const popup = document.getElementById('filterPopup');
-  const btn = document.getElementById('filterPopupBtn');
-  if (!popup) return;
-  const isHidden = popup.classList.toggle('hidden');
-  if (btn) btn.classList.toggle('active', !isHidden);
 }
 
 function setDateFilter(mode, btn) {
