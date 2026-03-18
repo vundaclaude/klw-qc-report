@@ -1530,48 +1530,25 @@ function renderDefChart(data) {
     }
   });
 
-  // Sort by count descending
-  const sorted = DEFECTS.slice().sort(function(a, b) { return totals[b.code] - totals[a.code]; });
-  const top5codes = new Set(sorted.slice(0, 5).map(function(d) { return d.code; }));
-
   const catColors = {work:'#e74c3c', mach:'#e67e22', matl:'#f39c12', other:'#607d8b'};
-  const labels = sorted.map(function(d) {
-    if (top5codes.has(d.code)) {
-      const short = d.vn.length > 12 ? d.vn.slice(0, 11) + '…' : d.vn;
-      return [d.code, short];
-    }
-    return d.code;
-  });
-  const vals = sorted.map(function(d) { return totals[d.code]; });
-  const bgColors = sorted.map(function(d) {
-    const base = catColors[d.cat];
-    return top5codes.has(d.code) ? base : base + '99';
-  });
+  const labels = DEFECTS.map(function(d) { return d.code; });
+  const vals = DEFECTS.map(function(d) { return totals[d.code]; });
+  const bgColors = DEFECTS.map(function(d) { return catColors[d.cat]; });
 
   chartDefInst = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: labels,
-      datasets: [{data: vals, backgroundColor: bgColors, borderRadius: 6, borderWidth: sorted.map(function(d) { return top5codes.has(d.code) ? 2 : 0; }), borderColor: sorted.map(function(d) { return catColors[d.cat]; })}]
+      datasets: [{data: vals, backgroundColor: bgColors, borderRadius: 6}]
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: {display: false},
-        tooltip: {
-          callbacks: {
-            title: function(items) {
-              const idx = items[0].dataIndex;
-              return sorted[idx].code + ' — ' + sorted[idx].vn;
-            }
-          }
-        }
-      },
+      plugins: {legend: {display: false}},
       scales: {y: {beginAtZero: true}},
       onClick: function(evt, elements) {
         if (!elements.length) return;
         const idx = elements[0].index;
-        const d = sorted[idx];
+        const d = DEFECTS[idx];
         showToast(d.code + ': ' + d.vn + ' (' + totals[d.code] + ' lỗi)');
       }
     }
