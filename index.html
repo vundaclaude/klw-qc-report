@@ -812,10 +812,16 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
     <!-- KPIs -->
     <div class="kpi-grid" id="perfKpis" style="display:none;margin-bottom:24px;"></div>
 
-    <!-- Chart: defect rate per staff -->
-    <div class="chart-card" id="perfChartWrap" style="display:none;margin-bottom:16px;">
-      <h3>Tỷ lệ lỗi theo Nhân viên</h3>
-      <canvas id="chartPerfStaff" height="120"></canvas>
+    <!-- Chart 1: Total inspected per staff -->
+    <div class="chart-card" id="perfChartInspectWrap" style="display:none;margin-bottom:16px;">
+      <h3>Tổng kiểm tra theo Nhân viên (pcs)</h3>
+      <canvas id="chartPerfInspect" height="100"></canvas>
+    </div>
+
+    <!-- Chart 2: Total defects + defect rate combo -->
+    <div class="chart-card" id="perfChartDefWrap" style="display:none;margin-bottom:16px;">
+      <h3>Tổng lỗi &amp; Tỷ lệ lỗi theo Nhân viên</h3>
+      <canvas id="chartPerfDefRate" height="120"></canvas>
     </div>
 
     <!-- Table -->
@@ -2317,7 +2323,8 @@ async function deleteStyle(id, code) {
 // ===========================
 // PERFORMANCE — TAB 5
 // ===========================
-let chartPerfStaffInst = null;
+let chartPerfInspectInst = null;
+let chartPerfDefRateInst = null;
 
 function initPerfPage() {
   const to = new Date();
@@ -2356,7 +2363,7 @@ async function loadPerf() {
 
     if (!filtered.length) {
       showToast('Không có dữ liệu trong khoảng đã chọn', true);
-      ['perfKpis','perfChartWrap','perfTableWrap'].forEach(function(id) {
+      ['perfKpis','perfChartInspectWrap','perfChartDefWrap','perfTableWrap'].forEach(function(id) {
         const el = document.getElementById(id); if (el) el.style.display = 'none';
       });
       return;
@@ -2407,29 +2414,90 @@ function renderPerf(data) {
       '<div class="kpi-card orange"><div class="ki">📉</div><div class="kv">' + avgRate + '%</div><div class="kl">Tỷ lệ lỗi TB</div></div>';
   }
 
-  // Chart: defect rate per staff (sorted best→worst left→right)
-  const canvas = document.getElementById('chartPerfStaff');
-  const chartWrap = document.getElementById('perfChartWrap');
-  if (canvas && chartWrap) {
-    if (chartPerfStaffInst) { chartPerfStaffInst.destroy(); chartPerfStaffInst = null; }
-    chartWrap.style.display = '';
-    const rates = rows.map(function(r) {
-      return r.inspected > 0 ? parseFloat(((r.defects / r.inspected) * 100).toFixed(2)) : 0;
-    });
-    const colors = rates.map(function(r) { return r < 9 ? '#27ae60' : r < 15 ? '#c9a000' : '#e74c3c'; });
-    chartPerfStaffInst = new Chart(canvas.getContext('2d'), {
+  const labels = rows.map(function(r) { return r.name; });
+  const rates = rows.map(function(r) {
+    return r.inspected > 0 ? parseFloat(((r.defects / r.inspected) * 100).toFixed(2)) : 0;
+  });
+  const rateColors = rates.map(function(r) { return r < 9 ? '#27ae60' : r < 15 ? '#c9a000' : '#e74c3c'; });
+
+  // Chart 1: Total inspected per staff
+  const c1 = document.getElementById('chartPerfInspect');
+  const w1 = document.getElementById('perfChartInspectWrap');
+  if (c1 && w1) {
+    if (chartPerfInspectInst) { chartPerfInspectInst.destroy(); chartPerfInspectInst = null; }
+    w1.style.display = '';
+    chartPerfInspectInst = new Chart(c1.getContext('2d'), {
       type: 'bar',
       data: {
-        labels: rows.map(function(r) { return r.name; }),
-        datasets: [{data: rates, backgroundColor: colors, borderRadius: 6}]
+        labels: labels,
+        datasets: [{
+          data: rows.map(function(r) { return r.inspected; }),
+          backgroundColor: '#4f6ef7',
+          borderRadius: 6
+        }]
       },
       options: {
         responsive: true,
         plugins: {
           legend: {display: false},
-          tooltip: {callbacks: {label: function(item) { return 'Tỷ lệ lỗi: ' + item.raw + '%'; }}}
+          tooltip: {callbacks: {label: function(item) { return 'KT: ' + item.raw.toLocaleString() + ' pcs'; }}}
         },
-        scales: {y: {beginAtZero: true, ticks: {callback: function(v) { return v + '%'; }}}}
+        scales: {y: {beginAtZero: true}}
+      }
+    });
+  }
+
+  // Chart 2: Total defects (bars) + defect rate (line) — combo chart
+  const c2 = document.getElementById('chartPerfDefRate');
+  const w2 = document.getElementById('perfChartDefWrap');
+  if (c2 && w2) {
+    if (chartPerfDefRateInst) { chartPerfDefRateInst.destroy(); chartPerfDefRateInst = null; }
+    w2.style.display = '';
+    chartPerfDefRateInst = new Chart(c2.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'Tổng lỗi',
+            data: rows.map(function(r) { return r.defects; }),
+            backgroundColor: rateColors,
+            borderRadius: 6,
+            yAxisID: 'yLeft'
+          },
+          {
+            type: 'line',
+            label: 'Tỷ lệ lỗi (%)',
+            data: rates,
+            borderColor: '#4f6ef7',
+            backgroundColor: 'rgba(79,110,247,0.08)',
+            borderWidth: 2,
+            pointRadius: 5,
+            pointBackgroundColor: rateColors,
+            tension: 0.3,
+            yAxisID: 'yRight'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {display: true, position: 'top', labels: {boxWidth: 12, font: {size: 12}}},
+          tooltip: {
+            callbacks: {
+              label: function(item) {
+                if (item.datasetIndex === 0) return 'Tổng lỗi: ' + item.raw;
+                return 'Tỷ lệ: ' + item.raw + '%';
+              }
+            }
+          }
+        },
+        scales: {
+          yLeft:  {type:'linear', position:'left',  beginAtZero:true, title:{display:true, text:'Số lỗi'}},
+          yRight: {type:'linear', position:'right', beginAtZero:true, grid:{drawOnChartArea:false},
+            ticks:{callback:function(v){return v+'%'}}, title:{display:true, text:'Tỷ lệ (%)'}}
+        }
       }
     });
   }
