@@ -1148,6 +1148,7 @@ function logout() {
   currentUser = null;
   managerLoaded = false;
   historyLoaded = false;
+  perfLoaded = false;
   managerData = [];
   histSubmissions = [];
   showLoginScreen();
@@ -2325,15 +2326,15 @@ async function deleteStyle(id, code) {
 // ===========================
 let chartPerfInspectInst = null;
 let chartPerfDefRateInst = null;
+let perfLoaded = false;
 
 function initPerfPage() {
-  const to = new Date();
-  const from = new Date(to.getTime() - 7 * 86400000);
-  const fmt = function(d) { return d.toISOString().slice(0,10); };
+  const today = new Date().toISOString().slice(0, 10);
   const df = document.getElementById('perfDateFrom');
   const dt = document.getElementById('perfDateTo');
-  if (df && !df.value) df.value = fmt(from);
-  if (dt && !dt.value) dt.value = fmt(to);
+  if (df && !df.value) df.value = today;
+  if (dt && !dt.value) dt.value = today;
+  if (!perfLoaded) { perfLoaded = true; loadPerf(); }
 }
 
 async function loadPerf() {
@@ -2464,7 +2465,8 @@ function renderPerf(data) {
             data: rows.map(function(r) { return r.defects; }),
             backgroundColor: rateColors,
             borderRadius: 6,
-            yAxisID: 'yLeft'
+            yAxisID: 'yLeft',
+            order: 2
           },
           {
             type: 'line',
@@ -2472,11 +2474,14 @@ function renderPerf(data) {
             data: rates,
             borderColor: '#4f6ef7',
             backgroundColor: 'rgba(79,110,247,0.08)',
-            borderWidth: 2,
-            pointRadius: 5,
+            borderWidth: 2.5,
+            pointRadius: 6,
             pointBackgroundColor: rateColors,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
             tension: 0.3,
-            yAxisID: 'yRight'
+            yAxisID: 'yRight',
+            order: 1
           }
         ]
       },
