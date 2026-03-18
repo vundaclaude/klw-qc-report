@@ -680,7 +680,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
   <div class="page" id="pageAdmin">
     <div class="admin-section">
       <div class="admin-section-title">
-        <span>👥 Quản lý Tài Khoản</span>
+        <span id="userSectionTitle">👥 Quản lý Tài Khoản</span>
         <button class="btn btn-primary btn-sm" onclick="showAddUserModal()">➕ Thêm Tài Khoản</button>
       </div>
       <div class="tbl-wrap">
@@ -1013,7 +1013,7 @@ function getTabsForRole(role) {
     {page:'admin',   label:'⚙️ Tài Khoản',     icon:'⚙️', short:'Admin'},
   ];
   if (role === 'staff')   return [allTabs[0]];
-  if (role === 'manager') return [allTabs[1], allTabs[2]];
+  if (role === 'manager') return [allTabs[1], allTabs[2], {page:'admin', label:'⚙️ Quản Lý', icon:'⚙️', short:'Quản Lý'}];
   return allTabs;
 }
 
@@ -1062,7 +1062,11 @@ function showPage(page) {
 
   if (page === 'manager' && !managerLoaded) loadManager();
   if (page === 'history' && !historyLoaded) loadHistory();
-  if (page === 'admin') { loadUsers(); loadStylesAdmin(); }
+  if (page === 'admin') {
+    const t = document.getElementById('userSectionTitle');
+    if (t) t.textContent = currentUser.role === 'manager' ? '👥 Tài Khoản Staff' : '👥 Quản lý Tài Khoản';
+    loadUsers(); loadStylesAdmin();
+  }
   if (page === 'input') loadStyles();
 }
 
@@ -1776,7 +1780,9 @@ async function loadUsers() {
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="6" class="loading-center"><div class="spinner"></div></td></tr>';
   try {
-    const { data, error } = await sb.from('users').select('*').order('created_at');
+    let q = sb.from('users').select('*').order('created_at');
+    if (currentUser.role === 'manager') q = q.eq('role', 'staff');
+    const { data, error } = await q;
     if (error) throw error;
     renderUsers(data || []);
   } catch(e) {
@@ -1812,7 +1818,13 @@ function showAddUserModal() {
   document.getElementById('newUsername').value = '';
   document.getElementById('newPassword').value = '';
   document.getElementById('newDisplayName').value = '';
-  document.getElementById('newRole').value = 'staff';
+  const roleSelect = document.getElementById('newRole');
+  if (currentUser.role === 'manager') {
+    roleSelect.innerHTML = '<option value="staff">Staff</option>';
+  } else {
+    roleSelect.innerHTML = '<option value="staff">Staff</option><option value="manager">Manager</option><option value="admin">Admin</option>';
+  }
+  roleSelect.value = 'staff';
   document.getElementById('addUserModal').classList.remove('hidden');
 }
 
@@ -1822,6 +1834,7 @@ async function createUser() {
   const display_name = document.getElementById('newDisplayName').value.trim();
   const role = document.getElementById('newRole').value;
   if (!username || !password) { showToast('Vui lòng nhập đủ thông tin', true); return; }
+  if (currentUser.role === 'manager' && role !== 'staff') { showToast('Manager chỉ được tạo tài khoản Staff', true); return; }
   let lastErr;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
