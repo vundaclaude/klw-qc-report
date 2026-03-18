@@ -772,12 +772,15 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
       </div>
     </div>
 
-    <button class="btn btn-success" style="width:100%;height:52px;font-size:15px;" onclick="runExportDownload()" id="exportBtn">⬇ Tải Excel</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <button class="btn btn-primary" style="height:52px;font-size:15px;" onclick="runExportFilter()" id="filterBtn">🔍 Lọc dữ liệu</button>
+      <button class="btn btn-success" style="height:52px;font-size:15px;" onclick="runExportDownload()" id="exportBtn" disabled>⬇ Tải Excel</button>
+    </div>
     <div class="export-summary" id="exportSummary"></div>
 
     <div id="exportChartWrap" style="display:none;margin-top:16px;">
       <div class="chart-card">
-        <h3>Tổng lỗi theo loại (S01–S23) — theo bộ lọc đã chọn</h3>
+        <h3>Tổng lỗi theo loại (S01–S23)</h3>
         <canvas id="chartExportDef" height="110"></canvas>
       </div>
     </div>
@@ -2263,6 +2266,7 @@ async function deleteStyle(id, code) {
 // ===========================
 let exportStylesData = [];
 let chartExportDefInst = null;
+let exportFilteredData = [];
 
 function initExportPage() {
   // Default date range: last 30 days
@@ -2273,6 +2277,13 @@ function initExportPage() {
   const dt = document.getElementById('exportDateTo');
   if (df && !df.value) df.value = fmt(from);
   if (dt && !dt.value) dt.value = fmt(to);
+  exportFilteredData = [];
+  const dlBtn = document.getElementById('exportBtn');
+  if (dlBtn) dlBtn.disabled = true;
+  const wrap = document.getElementById('exportChartWrap');
+  if (wrap) wrap.style.display = 'none';
+  const summary = document.getElementById('exportSummary');
+  if (summary) summary.style.display = 'none';
   buildExportLineChecks();
   loadExportStyles();
 }
@@ -2348,93 +2359,96 @@ function exportSelectAllStyles(checked) {
   });
 }
 
-async function runExportDownload() {
-  const fromDate = document.getElementById('exportDateFrom').value;
-  const toDate = document.getElementById('exportDateTo').value;
+function getExportSelections() {
+  return {
+    fromDate: document.getElementById('exportDateFrom').value,
+    toDate: document.getElementById('exportDateTo').value,
+    selLines: LINES.filter(function(l) {
+      const chk = document.getElementById('lchk_' + l); return chk && chk.checked;
+    }),
+    selStyles: exportStylesData.map(function(s) { return s.code; }).filter(function(code) {
+      const chk = document.getElementById('schk_' + code); return chk && chk.checked;
+    }),
+  };
+}
+
+async function runExportFilter() {
+  const { fromDate, toDate, selLines, selStyles } = getExportSelections();
   const summary = document.getElementById('exportSummary');
 
   if (!fromDate || !toDate) { showToast('Vui lòng chọn khoảng ngày', true); return; }
   if (fromDate > toDate) { showToast('Ngày bắt đầu phải trước ngày kết thúc', true); return; }
-
-  const selLines = LINES.filter(function(l) {
-    const chk = document.getElementById('lchk_' + l);
-    return chk && chk.checked;
-  });
-  const selStyles = exportStylesData.map(function(s) { return s.code; }).filter(function(code) {
-    const chk = document.getElementById('schk_' + code);
-    return chk && chk.checked;
-  });
-
   if (!selLines.length) { showToast('Chọn ít nhất 1 chuyền', true); return; }
   if (!selStyles.length) { showToast('Chọn ít nhất 1 mã hàng', true); return; }
 
-  const btn = document.getElementById('exportBtn');
-  btn.disabled = true; btn.textContent = '⏳ Đang tải dữ liệu...';
-  if (summary) { summary.style.display = 'none'; summary.textContent = ''; }
+  const btn = document.getElementById('filterBtn');
+  const dlBtn = document.getElementById('exportBtn');
+  btn.disabled = true; btn.textContent = '⏳ Đang tải...';
+  dlBtn.disabled = true;
+  if (summary) { summary.style.display = 'none'; }
+  exportFilteredData = [];
 
   try {
-    const fromISO = fromDate + 'T00:00:00.000Z';
-    const toISO = toDate + 'T23:59:59.999Z';
-
     const { data, error } = await sb.from('qc_submissions')
       .select('*')
-      .gte('created_at', fromISO)
-      .lte('created_at', toISO)
+      .gte('created_at', fromDate + 'T00:00:00.000Z')
+      .lte('created_at', toDate + 'T23:59:59.999Z')
       .order('created_at', {ascending: true})
       .limit(10000);
-
     if (error) throw error;
 
-    // Client-side filter by selected lines and styles
     const selLinesStr = selLines.map(String);
-    const filtered = (data || []).filter(function(r) {
+    exportFilteredData = (data || []).filter(function(r) {
       return selLinesStr.includes(String(r.line_number)) && selStyles.includes(r.style_number);
     });
 
-    if (!filtered.length) {
-      showToast('Không có dữ liệu trong khoảng đã chọn', true);
+    if (!exportFilteredData.length) {
+      showToast('Không có dữ liệu trong bộ lọc đã chọn', true);
       return;
     }
 
-    // Style name lookup
-    const styleNameMap = {};
-    exportStylesData.forEach(function(s) { styleNameMap[s.code] = s.name; });
-
-    // Build Excel rows — one row per submission, S01–S23 each as column
-    const rows = filtered.map(function(r) {
-      const row = {
-        'Ngày ghi nhận': new Date(r.created_at).toLocaleString('vi-VN'),
-        'Chuyền': r.line_number,
-        'Mã hàng': r.style_number,
-        'Tên hàng': styleNameMap[r.style_number] || '',
-        'Nhân viên': r.staff_name,
-        'Số lượng KT': r.total_inspected || 0,
-        'Tổng lỗi': r.total_defects || 0,
-        'Tỷ lệ lỗi (%)': r.defect_rate || 0,
-        'Ghi chú': r.note || '',
-      };
-      DEFECTS.forEach(function(d) {
-        row[d.code + ' ' + d.vn] = (r.defects && r.defects[d.code]) || 0;
-      });
-      return row;
-    });
-
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Chi tiết lỗi');
-    XLSX.writeFile(wb, 'KLW_Export_' + fromDate + '_to_' + toDate + '.xlsx');
-
+    renderExportDefChart(exportFilteredData);
     if (summary) {
-      summary.textContent = '✅ Đã xuất ' + filtered.length + ' bản ghi (' + fromDate + ' → ' + toDate + ')';
+      summary.textContent = exportFilteredData.length + ' bản ghi · ' + fromDate + ' → ' + toDate;
       summary.style.display = 'block';
     }
-    renderExportDefChart(filtered);
-    showToast('✅ Đã tải ' + filtered.length + ' bản ghi');
+    dlBtn.disabled = false;
   } catch(e) {
     showToast('Lỗi: ' + e.message, true);
   } finally {
-    btn.disabled = false; btn.textContent = '⬇ Tải Excel';
+    btn.disabled = false; btn.textContent = '🔍 Lọc dữ liệu';
   }
+}
+
+function runExportDownload() {
+  if (!exportFilteredData.length) { showToast('Bấm Lọc dữ liệu trước', true); return; }
+  const { fromDate, toDate } = getExportSelections();
+  const styleNameMap = {};
+  exportStylesData.forEach(function(s) { styleNameMap[s.code] = s.name; });
+
+  const rows = exportFilteredData.map(function(r) {
+    const row = {
+      'Ngày ghi nhận': new Date(r.created_at).toLocaleString('vi-VN'),
+      'Chuyền': r.line_number,
+      'Mã hàng': r.style_number,
+      'Tên hàng': styleNameMap[r.style_number] || '',
+      'Nhân viên': r.staff_name,
+      'Số lượng KT': r.total_inspected || 0,
+      'Tổng lỗi': r.total_defects || 0,
+      'Tỷ lệ lỗi (%)': r.defect_rate || 0,
+      'Ghi chú': r.note || '',
+    };
+    DEFECTS.forEach(function(d) {
+      row[d.code + ' ' + d.vn] = (r.defects && r.defects[d.code]) || 0;
+    });
+    return row;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Chi tiết lỗi');
+  XLSX.writeFile(wb, 'KLW_Export_' + fromDate + '_to_' + toDate + '.xlsx');
+  showToast('✅ Đã tải ' + exportFilteredData.length + ' bản ghi');
 }
 
 function renderExportDefChart(data) {
