@@ -446,11 +446,185 @@
     .error-bar-wrap { background: #f0f2f8; border-radius: 4px; height: 8px; width: 120px; display: inline-block; vertical-align: middle; margin-left: 8px; }
     .error-bar { background: var(--red); border-radius: 4px; height: 8px; transition: width 0.5s; }
 
+    /* ── BOTTOM NAV (mobile only) ── */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--navy);
+      z-index: 200;
+      padding: 0;
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.25);
+    }
+
+    .bottom-nav-inner {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .bnav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 4px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      color: rgba(255,255,255,0.5);
+      font-size: 10px;
+      font-weight: 600;
+      font-family: inherit;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.2s;
+      letter-spacing: 0.3px;
+    }
+
+    .bnav-btn .bnav-icon { font-size: 22px; line-height: 1; }
+    .bnav-btn.active { color: #7c9ef8; }
+    .bnav-btn:active { color: white; }
+
+    /* ── SCROLL HINT ── */
+    .scroll-hint {
+      display: none;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+      margin-bottom: 6px;
+    }
+
+    /* ── TABLET ── */
     @media (max-width: 900px) {
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
       .chart-grid { grid-template-columns: 1fr; }
       .page { padding: 16px; }
       .navbar { padding: 0 16px; gap: 16px; }
+      .error-bar-wrap { width: 80px; }
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 640px) {
+      /* Hide desktop nav tabs, show bottom nav */
+      .nav-tabs { display: none; }
+      .bottom-nav { display: block; }
+      .scroll-hint { display: block; }
+
+      /* Body padding for bottom nav */
+      body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+
+      /* Navbar compact */
+      .navbar {
+        height: 54px;
+        padding: 0 16px;
+        justify-content: center;
+      }
+
+      .navbar-brand { font-size: 16px; }
+
+      /* Page */
+      .page { padding: 12px 12px 16px; }
+      .page-title { font-size: 18px; }
+      .page-sub { font-size: 13px; margin-bottom: 16px; }
+
+      /* Cards */
+      .card { padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+      .card-title { font-size: 14px; margin-bottom: 14px; }
+
+      /* KPI */
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+      .kpi-card { padding: 14px; border-radius: 12px; gap: 12px; }
+      .kpi-icon { width: 42px; height: 42px; font-size: 18px; border-radius: 10px; }
+      .kpi-val { font-size: 26px; }
+      .kpi-label { font-size: 11px; }
+
+      /* Charts */
+      .chart-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 16px; }
+
+      /* Filter bar */
+      .filter-bar { gap: 8px; margin-bottom: 16px; }
+      .filter-bar label { width: 100%; margin-bottom: 2px; }
+      .filter-btn { padding: 8px 14px; font-size: 13px; flex: 1; text-align: center; }
+
+      /* Staff name input */
+      .staff-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .staff-row input[type="text"] { width: 100%; font-size: 16px; }
+
+      /* Number inputs — bigger for touch */
+      input[type="number"] {
+        width: 52px;
+        height: 40px;
+        font-size: 15px;
+        border-radius: 8px;
+      }
+
+      /* Input table */
+      .input-table thead th { padding: 9px 4px; font-size: 11px; }
+      .input-table thead th.process-col { min-width: 120px; }
+      .input-table tbody td { padding: 6px 3px; }
+      .input-table tbody td.process-name { font-size: 12px; padding-left: 8px; min-width: 120px; }
+
+      /* Legend */
+      .legend { font-size: 11px; gap: 4px 12px; padding: 10px 12px; }
+
+      /* Buttons */
+      .btn-primary, .btn-secondary, .btn-excel {
+        width: 100%;
+        justify-content: center;
+        font-size: 15px;
+        padding: 14px 20px;
+        border-radius: 12px;
+      }
+      .btn-row { flex-direction: column; gap: 10px; margin-top: 20px; }
+
+      /* Stat boxes */
+      .stat-row { gap: 10px; margin-bottom: 16px; }
+      .stat-box { padding: 14px 12px; border-radius: 12px; min-width: 120px; }
+      .stat-box .snum { font-size: 28px; }
+      .stat-box .slbl { font-size: 11px; }
+
+      /* Chart pair */
+      .chart-pair { flex-direction: column; gap: 12px; margin-bottom: 16px; }
+      .chart-pair .chart-card { min-width: unset; padding: 16px; border-radius: 12px; }
+
+      /* Toast */
+      .toast {
+        width: 90%;
+        text-align: center;
+        white-space: normal;
+        font-size: 14px;
+        padding: 12px 18px;
+        bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      }
+
+      /* Modal full screen on mobile */
+      .modal-overlay { padding: 0; align-items: flex-end; }
+      .modal {
+        border-radius: 20px 20px 0 0;
+        padding: 20px 16px;
+        max-height: 92vh;
+        width: 100%;
+      }
+      .modal-header h2 { font-size: 15px; }
+
+      /* History items */
+      .history-item { padding: 14px; border-radius: 12px; }
+      .history-item .hi-num { width: 36px; height: 36px; font-size: 15px; }
+      .history-item .hi-staff { font-size: 14px; }
+
+      /* Staff table — hide less important columns */
+      #staffTable thead th:nth-child(5),
+      #staffTable thead th:nth-child(6),
+      #staffTable thead th:nth-child(7),
+      #staffTable tbody td:nth-child(5),
+      #staffTable tbody td:nth-child(6),
+      #staffTable tbody td:nth-child(7) { display: none; }
+
+      /* Heatmap compact */
+      .heatmap-table { font-size: 11px; }
+      .heatmap-table thead th { padding: 8px 4px; font-size: 10px; }
+      .heatmap-table tbody td { padding: 6px 3px; }
     }
   </style>
 </head>
@@ -466,6 +640,21 @@
     </div>
   </nav>
 
+  <!-- ── BOTTOM NAV (mobile) ── -->
+  <div class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button class="bnav-btn active" id="bnav-input" onclick="showPage('input')">
+        <span class="bnav-icon">✏️</span>Nhập Báo Cáo
+      </button>
+      <button class="bnav-btn" id="bnav-manager" onclick="showPage('manager')">
+        <span class="bnav-icon">📊</span>Dashboard
+      </button>
+      <button class="bnav-btn" id="bnav-history" onclick="showPage('history')">
+        <span class="bnav-icon">📂</span>Lịch Sử
+      </button>
+    </div>
+  </div>
+
   <!-- ══════════════════════════════════════════ -->
   <!-- PAGE 1: INPUT                             -->
   <!-- ══════════════════════════════════════════ -->
@@ -480,6 +669,7 @@
         <label for="staffName">👤 Tên nhân viên:</label>
         <input type="text" id="staffName" placeholder="Nhập tên của bạn..." />
       </div>
+      <div class="scroll-hint">← Vuốt ngang để xem →</div>
       <div class="input-table-wrap">
         <table class="input-table">
           <thead id="inputHead"></thead>
@@ -687,10 +877,15 @@
   function showPage(page) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.bnav-btn').forEach(t => t.classList.remove('active'));
     document.getElementById('page'+page.charAt(0).toUpperCase()+page.slice(1)).classList.add('active');
-    document.querySelectorAll('.nav-tab')[page==='input'?0:page==='manager'?1:2].classList.add('active');
+    const idx = page==='input'?0:page==='manager'?1:2;
+    document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+    const bnavId = 'bnav-'+page;
+    if (document.getElementById(bnavId)) document.getElementById(bnavId).classList.add('active');
     if (page === 'manager' && !managerLoaded) { loadManager(); managerLoaded = true; }
     if (page === 'history' && !historyLoaded) { loadHistory(); historyLoaded = true; }
+    window.scrollTo(0,0);
   }
 
   // ── Submit report ──
