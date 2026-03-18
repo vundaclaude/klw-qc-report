@@ -111,6 +111,10 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 
 /* ===== TAB 1 — WIZARD ===== */
 #wizardWrap{max-width:540px;margin:0 auto;}
+.wizard-clock{display:flex;align-items:center;justify-content:space-between;
+  background:var(--navy);border-radius:12px;padding:10px 16px;margin-bottom:16px;}
+.wizard-clock-time{font-size:22px;font-weight:800;color:#fff;letter-spacing:2px;font-variant-numeric:tabular-nums;}
+.wizard-clock-date{font-size:12px;color:rgba(255,255,255,0.6);text-align:right;}
 .main-progress{display:flex;align-items:flex-start;justify-content:center;gap:0;margin-bottom:24px;padding:0 8px;}
 .mp-step{display:flex;flex-direction:column;align-items:center;position:relative;flex:1;}
 .mp-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--card);
@@ -415,6 +419,12 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
           <div class="mp-dot" id="mpDot5">5</div>
           <div class="mp-label" id="mpLabel5">Tổng kết</div>
         </div>
+      </div>
+
+      <!-- Persistent clock bar -->
+      <div class="wizard-clock">
+        <span class="wizard-clock-time" id="wizClockTime">--:--:--</span>
+        <span class="wizard-clock-date" id="wizClockDate"></span>
       </div>
 
       <!-- PG1: Select Line -->
@@ -1095,6 +1105,8 @@ function tick() {
   const de = document.getElementById('clockDate'); if (de) de.textContent = now.toLocaleDateString('vi-VN', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const nt = document.getElementById('navClockTime'); if (nt) nt.textContent = timeStr;
   const nd = document.getElementById('navClockDate'); if (nd) nd.textContent = dateStr;
+  const wt = document.getElementById('wizClockTime'); if (wt) wt.textContent = timeStr;
+  const wd = document.getElementById('wizClockDate'); if (wd) wd.textContent = dateStr;
 }
 
 // ===========================
