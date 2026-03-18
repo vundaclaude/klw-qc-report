@@ -786,7 +786,58 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
     </div>
   </div>
 
-  <!-- TAB 5: ADMIN -->
+  <!-- TAB 5: PERFORMANCE -->
+  <div class="page" id="pagePerf">
+
+    <!-- Filters -->
+    <div class="export-section" style="margin-bottom:16px;">
+      <div class="export-section-title">🔍 Bộ lọc</div>
+      <div class="date-range-row" style="margin-bottom:12px;">
+        <div class="fld"><label>Từ ngày</label><input type="date" id="perfDateFrom"></div>
+        <div class="fld"><label>Đến ngày</label><input type="date" id="perfDateTo"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select class="filter-select" id="perfLineFilter">
+          <option value="all">Tất cả chuyền</option>
+          <option value="10">Chuyền 10</option><option value="11">Chuyền 11</option>
+          <option value="12">Chuyền 12</option><option value="13">Chuyền 13</option>
+          <option value="14">Chuyền 14</option><option value="15">Chuyền 15</option>
+          <option value="16">Chuyền 16</option><option value="17">Chuyền 17</option>
+          <option value="18">Chuyền 18</option><option value="19">Chuyền 19</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadPerf()" id="perfFilterBtn">🔍 Xem báo cáo</button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="perfKpis" style="display:none;margin-bottom:24px;"></div>
+
+    <!-- Chart: defect rate per staff -->
+    <div class="chart-card" id="perfChartWrap" style="display:none;margin-bottom:16px;">
+      <h3>Tỷ lệ lỗi theo Nhân viên</h3>
+      <canvas id="chartPerfStaff" height="120"></canvas>
+    </div>
+
+    <!-- Table -->
+    <div class="card" id="perfTableWrap" style="display:none;">
+      <div class="section-title">Chi tiết theo Nhân viên</div>
+      <div class="tbl-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nhân viên</th><th>Chuyền</th><th>Số ca</th>
+              <th>Tổng KT (pcs)</th><th>TB/ca (pcs)</th>
+              <th>Tổng lỗi</th><th>Tỷ lệ lỗi</th>
+            </tr>
+          </thead>
+          <tbody id="perfTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TAB 6: ADMIN -->
   <div class="page" id="pageAdmin">
     <div class="admin-section">
       <div class="admin-section-title">
@@ -1122,10 +1173,11 @@ function getTabsForRole(role) {
     {page:'manager', label:'📊 Dashboard',     icon:'📊', short:'Dashboard'},
     {page:'history', label:'📂 Lịch Sử',       icon:'📂', short:'Lịch Sử'},
     {page:'export',  label:'📥 Xuất Dữ Liệu',  icon:'📥', short:'Xuất'},
+    {page:'perf',    label:'📈 Hiệu Suất',      icon:'📈', short:'Hiệu Suất'},
     {page:'admin',   label:'⚙️ Tài Khoản',     icon:'⚙️', short:'Admin'},
   ];
   if (role === 'staff')   return [allTabs[0]];
-  if (role === 'manager') return [allTabs[1], allTabs[2], allTabs[3], {page:'admin', label:'⚙️ Quản Lý', icon:'⚙️', short:'Quản Lý'}];
+  if (role === 'manager') return [allTabs[1], allTabs[2], allTabs[3], allTabs[4], {page:'admin', label:'⚙️ Quản Lý', icon:'⚙️', short:'Quản Lý'}];
   return allTabs;
 }
 
@@ -1161,7 +1213,7 @@ function buildBottomNav() {
 function showPage(page) {
   currentPage = page;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-  const pageMap = {input:'pageInput', manager:'pageManager', history:'pageHistory', export:'pageExport', admin:'pageAdmin'};
+  const pageMap = {input:'pageInput', manager:'pageManager', history:'pageHistory', export:'pageExport', perf:'pagePerf', admin:'pageAdmin'};
   const el = document.getElementById(pageMap[page]);
   if (el) el.classList.add('active');
   const fl = document.getElementById('dateRangeLabel');
@@ -1177,6 +1229,7 @@ function showPage(page) {
   if (page === 'manager' && !managerLoaded) loadManager();
   if (page === 'history' && !historyLoaded) loadHistory();
   if (page === 'export') initExportPage();
+  if (page === 'perf') initPerfPage();
   if (page === 'admin') {
     const t = document.getElementById('userSectionTitle');
     if (t) t.textContent = currentUser.role === 'manager' ? '👥 Tài Khoản Staff' : '👥 Quản lý Tài Khoản';
@@ -2258,6 +2311,151 @@ async function deleteStyle(id, code) {
     loadStylesAdmin();
   } catch(e) {
     showToast('Lỗi: ' + e.message, true);
+  }
+}
+
+// ===========================
+// PERFORMANCE — TAB 5
+// ===========================
+let chartPerfStaffInst = null;
+
+function initPerfPage() {
+  const to = new Date();
+  const from = new Date(to.getTime() - 7 * 86400000);
+  const fmt = function(d) { return d.toISOString().slice(0,10); };
+  const df = document.getElementById('perfDateFrom');
+  const dt = document.getElementById('perfDateTo');
+  if (df && !df.value) df.value = fmt(from);
+  if (dt && !dt.value) dt.value = fmt(to);
+}
+
+async function loadPerf() {
+  const fromDate = document.getElementById('perfDateFrom').value;
+  const toDate = document.getElementById('perfDateTo').value;
+  const lineFilter = document.getElementById('perfLineFilter').value;
+
+  if (!fromDate || !toDate) { showToast('Chọn khoảng ngày', true); return; }
+  if (fromDate > toDate) { showToast('Ngày bắt đầu phải trước ngày kết thúc', true); return; }
+
+  const btn = document.getElementById('perfFilterBtn');
+  btn.disabled = true; btn.textContent = '⏳ Đang tải...';
+
+  try {
+    const { data, error } = await sb.from('qc_submissions')
+      .select('*')
+      .gte('created_at', fromDate + 'T00:00:00.000Z')
+      .lte('created_at', toDate + 'T23:59:59.999Z')
+      .order('created_at', {ascending: true})
+      .limit(10000);
+    if (error) throw error;
+
+    let filtered = data || [];
+    if (lineFilter !== 'all') {
+      filtered = filtered.filter(function(r) { return String(r.line_number) === String(lineFilter); });
+    }
+
+    if (!filtered.length) {
+      showToast('Không có dữ liệu trong khoảng đã chọn', true);
+      ['perfKpis','perfChartWrap','perfTableWrap'].forEach(function(id) {
+        const el = document.getElementById(id); if (el) el.style.display = 'none';
+      });
+      return;
+    }
+
+    renderPerf(filtered);
+  } catch(e) {
+    showToast('Lỗi: ' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍 Xem báo cáo';
+  }
+}
+
+function renderPerf(data) {
+  // Aggregate by staff name
+  const staffMap = {};
+  data.forEach(function(r) {
+    const key = r.staff_name;
+    if (!staffMap[key]) {
+      staffMap[key] = {name: key, lines: {}, sessions: 0, inspected: 0, defects: 0};
+    }
+    staffMap[key].sessions++;
+    staffMap[key].inspected += r.total_inspected || 0;
+    staffMap[key].defects += r.total_defects || 0;
+    staffMap[key].lines[r.line_number] = true;
+  });
+
+  // Sort by defect rate ascending (best performers first)
+  const rows = Object.values(staffMap).sort(function(a, b) {
+    const ra = a.inspected > 0 ? a.defects / a.inspected : 0;
+    const rb = b.inspected > 0 ? b.defects / b.inspected : 0;
+    return ra - rb;
+  });
+
+  // KPIs
+  const totalInspected = data.reduce(function(s, r) { return s + (r.total_inspected || 0); }, 0);
+  const totalDefects   = data.reduce(function(s, r) { return s + (r.total_defects || 0); }, 0);
+  const avgRate = totalInspected > 0 ? ((totalDefects / totalInspected) * 100).toFixed(1) : '0.0';
+  const bestRate = rows.length ? (rows[0].inspected > 0 ? ((rows[0].defects / rows[0].inspected) * 100).toFixed(1) : '0.0') : '—';
+
+  const kpis = document.getElementById('perfKpis');
+  if (kpis) {
+    kpis.style.display = '';
+    kpis.innerHTML =
+      '<div class="kpi-card blue"><div class="ki">👷</div><div class="kv">' + rows.length + '</div><div class="kl">Nhân viên</div></div>' +
+      '<div class="kpi-card blue"><div class="ki">📋</div><div class="kv">' + data.length + '</div><div class="kl">Số ca báo cáo</div></div>' +
+      '<div class="kpi-card blue"><div class="ki">📦</div><div class="kv">' + totalInspected.toLocaleString() + '</div><div class="kl">Tổng KT (pcs)</div></div>' +
+      '<div class="kpi-card orange"><div class="ki">📉</div><div class="kv">' + avgRate + '%</div><div class="kl">Tỷ lệ lỗi TB</div></div>';
+  }
+
+  // Chart: defect rate per staff (sorted best→worst left→right)
+  const canvas = document.getElementById('chartPerfStaff');
+  const chartWrap = document.getElementById('perfChartWrap');
+  if (canvas && chartWrap) {
+    if (chartPerfStaffInst) { chartPerfStaffInst.destroy(); chartPerfStaffInst = null; }
+    chartWrap.style.display = '';
+    const rates = rows.map(function(r) {
+      return r.inspected > 0 ? parseFloat(((r.defects / r.inspected) * 100).toFixed(2)) : 0;
+    });
+    const colors = rates.map(function(r) { return r < 9 ? '#27ae60' : r < 15 ? '#c9a000' : '#e74c3c'; });
+    chartPerfStaffInst = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: rows.map(function(r) { return r.name; }),
+        datasets: [{data: rates, backgroundColor: colors, borderRadius: 6}]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {display: false},
+          tooltip: {callbacks: {label: function(item) { return 'Tỷ lệ lỗi: ' + item.raw + '%'; }}}
+        },
+        scales: {y: {beginAtZero: true, ticks: {callback: function(v) { return v + '%'; }}}}
+      }
+    });
+  }
+
+  // Table
+  const tbody = document.getElementById('perfTable');
+  const tableWrap = document.getElementById('perfTableWrap');
+  if (tbody && tableWrap) {
+    tableWrap.style.display = '';
+    const medals = ['🥇', '🥈', '🥉'];
+    tbody.innerHTML = rows.map(function(r, i) {
+      const rate = r.inspected > 0 ? ((r.defects / r.inspected) * 100).toFixed(1) : '0.0';
+      const cls = rateColorClass(rate);
+      const avgPerSession = r.sessions > 0 ? Math.round(r.inspected / r.sessions) : 0;
+      const lines = Object.keys(r.lines).sort().map(function(l) { return 'C' + l; }).join(', ');
+      const prefix = medals[i] ? medals[i] + ' ' : '';
+      return '<tr>' +
+        '<td><strong>' + prefix + r.name + '</strong></td>' +
+        '<td style="font-size:12px;color:var(--muted);">' + lines + '</td>' +
+        '<td>' + r.sessions + '</td>' +
+        '<td>' + r.inspected.toLocaleString() + '</td>' +
+        '<td>' + avgPerSession.toLocaleString() + '</td>' +
+        '<td>' + r.defects.toLocaleString() + '</td>' +
+        '<td class="' + cls + '">' + rate + '%</td>' +
+      '</tr>';
+    }).join('');
   }
 }
 
