@@ -6,6 +6,7 @@
 <title>KLW Vietnam QC Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -1057,6 +1058,10 @@ let currentHistSubmission = null;
 // INIT
 // ===========================
 document.addEventListener('DOMContentLoaded', () => {
+  // Disable datalabels globally — only enable per-chart where needed
+  if (typeof ChartDataLabels !== 'undefined') {
+    Chart.defaults.plugins.datalabels.display = false;
+  }
   sb = supabase.createClient(SB_URL, SB_KEY);
   checkAuth();
   initDefVals();
@@ -2439,9 +2444,18 @@ function renderPerf(data) {
       },
       options: {
         responsive: true,
+        layout: {padding: {top: 20}},
         plugins: {
           legend: {display: false},
-          tooltip: {callbacks: {label: function(item) { return 'KT: ' + item.raw.toLocaleString() + ' pcs'; }}}
+          tooltip: {callbacks: {label: function(item) { return 'KT: ' + item.raw.toLocaleString() + ' pcs'; }}},
+          datalabels: {
+            display: true,
+            anchor: 'end',
+            align: 'top',
+            font: {size: 11, weight: '700'},
+            color: '#1a1a2e',
+            formatter: function(v) { return v.toLocaleString(); }
+          }
         },
         scales: {y: {beginAtZero: true}}
       }
@@ -2466,7 +2480,15 @@ function renderPerf(data) {
             backgroundColor: rateColors,
             borderRadius: 6,
             yAxisID: 'yLeft',
-            order: 2
+            order: 2,
+            datalabels: {
+              display: true,
+              anchor: 'end',
+              align: 'top',
+              font: {size: 11, weight: '700'},
+              color: '#1a1a2e',
+              formatter: function(v) { return v; }
+            }
           },
           {
             type: 'line',
@@ -2481,12 +2503,21 @@ function renderPerf(data) {
             pointBorderWidth: 2,
             tension: 0.3,
             yAxisID: 'yRight',
-            order: 1
+            order: 1,
+            datalabels: {
+              display: true,
+              anchor: 'end',
+              align: 'top',
+              font: {size: 10, weight: '700'},
+              color: '#4f6ef7',
+              formatter: function(v) { return v + '%'; }
+            }
           }
         ]
       },
       options: {
         responsive: true,
+        layout: {padding: {top: 24}},
         plugins: {
           legend: {display: true, position: 'top', labels: {boxWidth: 12, font: {size: 12}}},
           tooltip: {
@@ -2496,7 +2527,8 @@ function renderPerf(data) {
                 return 'Tỷ lệ: ' + item.raw + '%';
               }
             }
-          }
+          },
+          datalabels: {display: true}
         },
         scales: {
           yLeft:  {type:'linear', position:'left',  beginAtZero:true, title:{display:true, text:'Số lỗi'}},
