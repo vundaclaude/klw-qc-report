@@ -6,6 +6,7 @@
   <title>Báo Cáo Lỗi QC – Áo Thun</title>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -16,19 +17,32 @@
       padding: 24px;
     }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 6px;
-      color: #1a1a2e;
-      font-size: 24px;
+    h1 { text-align: center; margin-bottom: 6px; color: #1a1a2e; font-size: 24px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 28px; font-size: 15px; }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      justify-content: center;
     }
 
-    .subtitle {
-      text-align: center;
-      color: #666;
-      margin-bottom: 28px;
+    .tab-btn {
+      padding: 10px 28px;
+      border: 2px solid #1a1a2e;
+      border-radius: 8px;
+      background: white;
+      color: #1a1a2e;
       font-size: 15px;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
     }
+
+    .tab-btn.active { background: #1a1a2e; color: white; }
+    .tab-btn:hover:not(.active) { background: #eef2ff; }
 
     /* ── CARD ── */
     .card {
@@ -47,14 +61,32 @@
       padding-bottom: 8px;
     }
 
+    /* ── STAFF NAME INPUT ── */
+    .staff-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .staff-row label { font-weight: 600; font-size: 15px; white-space: nowrap; }
+
+    .staff-row input[type="text"] {
+      padding: 10px 14px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      width: 260px;
+    }
+
+    .staff-row input[type="text"]:focus { outline: none; border-color: #4f6ef7; }
+
     /* ── TABLE ── */
     .table-wrap { overflow-x: auto; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 960px;
-    }
+    table { width: 100%; border-collapse: collapse; min-width: 960px; }
 
     thead th {
       background: #1a1a2e;
@@ -65,140 +97,83 @@
       white-space: nowrap;
     }
 
-    thead th.process-col {
-      text-align: left;
-      padding-left: 14px;
-      min-width: 170px;
-    }
-
+    thead th.process-col { text-align: left; padding-left: 14px; min-width: 170px; }
     thead th.num-col { width: 36px; min-width: 36px; }
-
     thead th.total-col { background: #2c3e7a; min-width: 64px; }
 
     tbody tr:nth-child(even) { background: #f9f9f9; }
     tbody tr:hover { background: #eef2ff; }
 
-    tbody td {
-      padding: 7px 5px;
-      font-size: 14px;
-      border-bottom: 1px solid #eee;
-      text-align: center;
-    }
-
-    tbody td.process-name {
-      text-align: left;
-      padding-left: 14px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    tbody td.row-total {
-      font-weight: bold;
-      color: #4f6ef7;
-      background: #f0f4ff;
-    }
+    tbody td { padding: 7px 5px; font-size: 14px; border-bottom: 1px solid #eee; text-align: center; }
+    tbody td.process-name { text-align: left; padding-left: 14px; font-weight: 600; white-space: nowrap; }
+    tbody td.row-total { font-weight: bold; color: #4f6ef7; background: #f0f4ff; }
 
     tfoot td {
-      padding: 10px 5px;
-      font-size: 13px;
-      text-align: center;
-      font-weight: bold;
-      border-top: 2px solid #1a1a2e;
-      background: #f0f4ff;
-      color: #1a1a2e;
+      padding: 10px 5px; font-size: 13px; text-align: center;
+      font-weight: bold; border-top: 2px solid #1a1a2e;
+      background: #f0f4ff; color: #1a1a2e;
     }
 
-    tfoot td.col-label {
-      text-align: left;
-      padding-left: 14px;
-      background: #1a1a2e;
-      color: white;
-    }
-
-    tfoot td.grand-total {
-      background: #1a1a2e;
-      color: white;
-    }
+    tfoot td.col-label { text-align: left; padding-left: 14px; background: #1a1a2e; color: white; }
+    tfoot td.grand-total { background: #1a1a2e; color: white; }
 
     input[type="number"] {
-      width: 56px;
-      padding: 5px 3px;
-      border: 1.5px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      text-align: center;
-      font-family: inherit;
+      width: 56px; padding: 5px 3px; border: 1.5px solid #ccc;
+      border-radius: 6px; font-size: 14px; text-align: center; font-family: inherit;
     }
 
-    input[type="number"]:focus {
-      outline: none;
-      border-color: #4f6ef7;
-    }
+    input[type="number"]:focus { outline: none; border-color: #4f6ef7; }
 
     /* ── LEGEND ── */
     .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 18px;
-      margin-top: 18px;
-      padding: 14px 16px;
-      background: #f8f9ff;
-      border-radius: 8px;
-      border: 1px solid #e0e4f8;
-      font-size: 13px;
-      color: #555;
+      display: flex; flex-wrap: wrap; gap: 6px 18px;
+      margin-top: 18px; padding: 14px 16px;
+      background: #f8f9ff; border-radius: 8px;
+      border: 1px solid #e0e4f8; font-size: 13px; color: #555;
     }
 
     .legend span b { color: #1a1a2e; }
 
     /* ── BUTTONS ── */
     .btn {
-      display: block;
-      margin: 24px auto 0;
-      padding: 14px 50px;
-      background: #4f6ef7;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 17px;
-      cursor: pointer;
-      transition: background 0.2s;
+      display: block; margin: 24px auto 0; padding: 14px 50px;
+      background: #4f6ef7; color: white; border: none;
+      border-radius: 10px; font-size: 17px; cursor: pointer;
+      transition: background 0.2s; font-family: inherit;
     }
 
     .btn:hover { background: #3a56d4; }
+    .btn:disabled { background: #aab4e8; cursor: not-allowed; }
 
     .reset-btn {
-      display: block;
-      margin: 24px auto 0;
-      padding: 12px 36px;
-      background: white;
-      color: #e74c3c;
-      border: 2px solid #e74c3c;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.2s;
+      display: block; margin: 24px auto 0; padding: 12px 36px;
+      background: white; color: #e74c3c; border: 2px solid #e74c3c;
+      border-radius: 10px; font-size: 16px; cursor: pointer;
+      transition: all 0.2s; font-family: inherit;
     }
 
     .reset-btn:hover { background: #e74c3c; color: white; }
 
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: #27ae60; color: white; padding: 14px 28px;
+      border-radius: 10px; font-size: 15px; font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 9999;
+      opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+
+    .toast.error { background: #e74c3c; }
+    .toast.show { opacity: 1; }
+
     /* ── DASHBOARD ── */
     .dashboard { display: none; }
 
-    .stats-row {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
+    .stats-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
 
     .stat-box {
-      flex: 1;
-      min-width: 150px;
-      background: white;
-      border-radius: 12px;
-      padding: 20px 16px;
-      text-align: center;
+      flex: 1; min-width: 150px; background: white; border-radius: 12px;
+      padding: 20px 16px; text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
@@ -208,170 +183,196 @@
     .stat-box.green  .number { color: #27ae60; }
     .stat-box.orange .number { color: #e67e22; }
 
-    .charts-row {
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
-    }
+    .charts-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 28px; }
 
     .chart-card {
-      flex: 1;
-      min-width: 300px;
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
+      flex: 1; min-width: 300px; background: white;
+      border-radius: 12px; padding: 24px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    .chart-card h2 {
-      margin-bottom: 16px;
-      font-size: 15px;
-      color: #444;
-    }
+    .chart-card h2 { margin-bottom: 16px; font-size: 15px; color: #444; }
 
     /* ── REPORT TABLE ── */
     .report-table-wrap { overflow-x: auto; }
 
-    .report-table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 960px;
-      font-size: 13px;
-    }
+    .report-table { width: 100%; border-collapse: collapse; min-width: 960px; font-size: 13px; }
 
     .report-table thead th {
-      background: #1a1a2e;
-      color: white;
-      padding: 10px 7px;
-      text-align: center;
-      white-space: nowrap;
+      background: #1a1a2e; color: white; padding: 10px 7px;
+      text-align: center; white-space: nowrap;
     }
 
-    .report-table thead th.process-col {
-      text-align: left;
-      padding-left: 14px;
-      min-width: 170px;
-    }
-
+    .report-table thead th.process-col { text-align: left; padding-left: 14px; min-width: 170px; }
     .report-table thead th.total-col { background: #2c3e7a; }
 
-    .report-table tbody td {
-      padding: 8px 6px;
-      text-align: center;
-      border-bottom: 1px solid #eee;
-    }
-
-    .report-table tbody td.process-name {
-      text-align: left;
-      padding-left: 14px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .report-table tbody td.has-error {
-      background: #fff0f0;
-      color: #c0392b;
-      font-weight: bold;
-    }
-
-    .report-table tbody td.row-total {
-      background: #f0f4ff;
-      font-weight: bold;
-      color: #4f6ef7;
-    }
+    .report-table tbody td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #eee; }
+    .report-table tbody td.process-name { text-align: left; padding-left: 14px; font-weight: 600; white-space: nowrap; }
+    .report-table tbody td.has-error { background: #fff0f0; color: #c0392b; font-weight: bold; }
+    .report-table tbody td.row-total { background: #f0f4ff; font-weight: bold; color: #4f6ef7; }
 
     .report-table tfoot td {
-      padding: 10px 6px;
-      font-weight: bold;
-      text-align: center;
-      border-top: 2px solid #1a1a2e;
-      background: #f0f4ff;
-      color: #1a1a2e;
+      padding: 10px 6px; font-weight: bold; text-align: center;
+      border-top: 2px solid #1a1a2e; background: #f0f4ff; color: #1a1a2e;
     }
 
-    .report-table tfoot td.col-label {
-      text-align: left;
-      padding-left: 14px;
-      background: #1a1a2e;
-      color: white;
+    .report-table tfoot td.col-label { text-align: left; padding-left: 14px; background: #1a1a2e; color: white; }
+    .report-table tfoot td.grand-total { background: #1a1a2e; color: white; }
+
+    /* ── HISTORY ── */
+    .history-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .history-item {
+      border: 1px solid #e8e8e8; border-radius: 10px;
+      padding: 16px 20px; cursor: pointer;
+      transition: all 0.2s; background: white;
     }
 
-    .report-table tfoot td.grand-total {
-      background: #1a1a2e;
-      color: white;
+    .history-item:hover { border-color: #4f6ef7; background: #f8f9ff; }
+
+    .history-item .hi-top {
+      display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 8px;
     }
+
+    .history-item .hi-staff { font-weight: 700; font-size: 15px; color: #1a1a2e; }
+    .history-item .hi-date  { font-size: 13px; color: #888; }
+    .history-item .hi-total { font-size: 22px; font-weight: bold; color: #e74c3c; }
+    .history-item .hi-label { font-size: 12px; color: #aaa; }
+
+    .history-empty { text-align: center; color: #aaa; padding: 40px; font-size: 15px; }
+
+    .loading { text-align: center; color: #888; padding: 30px; font-size: 15px; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 1000;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: white; border-radius: 14px; padding: 28px;
+      max-width: 1100px; width: 100%; max-height: 90vh;
+      overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: 20px;
+    }
+
+    .modal-header h2 { font-size: 18px; color: #1a1a2e; }
+    .modal-header .close-btn {
+      background: none; border: none; font-size: 22px;
+      cursor: pointer; color: #999; line-height: 1;
+    }
+
+    .modal-header .close-btn:hover { color: #333; }
   </style>
 </head>
 <body>
 
   <h1>📋 Báo Cáo Lỗi QC – Áo Thun</h1>
-  <p class="subtitle">Nhập số lỗi theo từng công đoạn và loại lỗi, sau đó bấm <strong>Gửi Báo Cáo</strong></p>
+  <p class="subtitle">KLW Vietnam – Hệ thống kiểm soát chất lượng</p>
 
-  <!-- INPUT SECTION -->
-  <div class="card" id="inputSection">
-    <h2>Phiếu Nhập Lỗi – Quy Trình Sản Xuất Áo Thun</h2>
-    <div class="table-wrap">
-      <table>
-        <thead id="inputHead"></thead>
-        <tbody id="inputBody"></tbody>
-        <tfoot id="inputFoot"></tfoot>
-      </table>
-    </div>
-    <div class="legend" id="defectLegend"></div>
-    <button class="btn" onclick="guiBaoCao()">✅ Gửi Báo Cáo</button>
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('input')">✏️ Nhập Báo Cáo</button>
+    <button class="tab-btn" onclick="showTab('history')">📂 Lịch Sử Báo Cáo</button>
   </div>
 
-  <!-- DASHBOARD -->
-  <div class="dashboard" id="dashboard">
-    <div class="stats-row" id="statsRow"></div>
+  <!-- ══ TAB: INPUT ══ -->
+  <div id="tabInput">
 
-    <div class="charts-row">
-      <div class="chart-card">
-        <h2>📊 Tổng Lỗi Theo Công Đoạn</h2>
-        <canvas id="barProcess"></canvas>
+    <!-- INPUT FORM -->
+    <div class="card" id="inputSection">
+      <h2>Phiếu Nhập Lỗi – Quy Trình Sản Xuất Áo Thun</h2>
+
+      <div class="staff-row">
+        <label for="staffName">👤 Tên nhân viên:</label>
+        <input type="text" id="staffName" placeholder="Nhập tên của bạn..." />
       </div>
-      <div class="chart-card">
-        <h2>📊 Tổng Lỗi Theo Loại Lỗi</h2>
-        <canvas id="barDefect"></canvas>
+
+      <div class="table-wrap">
+        <table>
+          <thead id="inputHead"></thead>
+          <tbody id="inputBody"></tbody>
+          <tfoot id="inputFoot"></tfoot>
+        </table>
       </div>
+      <div class="legend" id="defectLegend"></div>
+      <button class="btn" id="submitBtn" onclick="guiBaoCao()">✅ Gửi Báo Cáo</button>
     </div>
 
+    <!-- DASHBOARD -->
+    <div class="dashboard" id="dashboard">
+      <div class="stats-row" id="statsRow"></div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <h2>📊 Tổng Lỗi Theo Công Đoạn</h2>
+          <canvas id="barProcess"></canvas>
+        </div>
+        <div class="chart-card">
+          <h2>📊 Tổng Lỗi Theo Loại Lỗi</h2>
+          <canvas id="barDefect"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📋 Bảng Tổng Hợp Chi Tiết</h2>
+        <div class="report-table-wrap">
+          <table class="report-table" id="reportTable"></table>
+        </div>
+      </div>
+
+      <button class="reset-btn" onclick="nhapLai()">← Nhập Báo Cáo Mới</button>
+    </div>
+  </div>
+
+  <!-- ══ TAB: HISTORY ══ -->
+  <div id="tabHistory" style="display:none;">
     <div class="card">
-      <h2>📋 Bảng Tổng Hợp Chi Tiết</h2>
-      <div class="report-table-wrap">
-        <table class="report-table" id="reportTable"></table>
-      </div>
+      <h2>📂 Lịch Sử Báo Cáo</h2>
+      <div id="historyContent" class="loading">Đang tải...</div>
     </div>
-
-    <button class="reset-btn" onclick="nhapLai()">← Nhập Báo Cáo Mới</button>
   </div>
+
+  <!-- MODAL: View past report -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="modalContent">
+      <div class="modal-header">
+        <h2 id="modalTitle"></h2>
+        <button class="close-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
 
 <script>
+  // ── Supabase ──
+  const { createClient } = supabase;
+  const sb = createClient(
+    'https://tfgwycupqfzgjcddzgar.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRmZ3d5Y3VwcWZ6Z2pjZGR6Z2FyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3OTM0OTAsImV4cCI6MjA4OTM2OTQ5MH0.MBTKVIZKCQRgJeWXRXABBUq50kcDb-RjQYnkRujla_k'
+  );
+
+  // ── Data ──
   const congDoan = [
-    "Cắt vải",
-    "May cổ áo",
-    "Ghép vai",
-    "May tay áo",
-    "Ráp tay vào thân",
-    "May sườn",
-    "Lai gấu",
-    "Đính nhãn / Tag",
-    "Kiểm tra & Ủi",
-    "Đóng gói"
+    "Cắt vải", "May cổ áo", "Ghép vai", "May tay áo",
+    "Ráp tay vào thân", "May sườn", "Lai gấu",
+    "Đính nhãn / Tag", "Kiểm tra & Ủi", "Đóng gói"
   ];
 
   const loaiLoi = [
-    "Lỗi đường may",
-    "Lệch đường may",
-    "Nhăn / Rúm",
-    "Hở mũi chỉ",
-    "Chỉ thừa",
-    "Bỏ sót mũi may",
-    "Vải bị hỏng",
-    "Lỗi màu sắc",
-    "Kích thước sai",
-    "Hàng bẩn"
+    "Lỗi đường may", "Lệch đường may", "Nhăn / Rúm", "Hở mũi chỉ", "Chỉ thừa",
+    "Bỏ sót mũi may", "Vải bị hỏng", "Lỗi màu sắc", "Kích thước sai", "Hàng bẩn"
   ];
 
   const mauSac = [
@@ -380,21 +381,14 @@
   ];
 
   // ── Build input table header ──
-  let thRow = `<tr>
-    <th class="num-col">#</th>
-    <th class="process-col">Công Đoạn</th>`;
-  loaiLoi.forEach((name, j) => {
-    thRow += `<th title="${name}">L${j + 1}</th>`;
-  });
+  let thRow = `<tr><th class="num-col">#</th><th class="process-col">Công Đoạn</th>`;
+  loaiLoi.forEach((name, j) => { thRow += `<th title="${name}">L${j + 1}</th>`; });
   thRow += `<th class="total-col">Tổng</th></tr>`;
   document.getElementById("inputHead").innerHTML = thRow;
 
-  // ── Build input table body ──
   const tbody = document.getElementById("inputBody");
   congDoan.forEach((cd, i) => {
-    let row = `<tr>
-      <td>${i + 1}</td>
-      <td class="process-name">${cd}</td>`;
+    let row = `<tr><td>${i + 1}</td><td class="process-name">${cd}</td>`;
     loaiLoi.forEach((_, j) => {
       row += `<td><input type="number" id="inp_${i}_${j}" min="0" value="0" oninput="updateTotals()" /></td>`;
     });
@@ -402,17 +396,13 @@
     tbody.innerHTML += row;
   });
 
-  // ── Build input table footer ──
   let ftRow = `<tr><td class="col-label" colspan="2">Tổng Cộng</td>`;
   loaiLoi.forEach((_, j) => { ftRow += `<td id="ct_${j}">0</td>`; });
   ftRow += `<td class="grand-total" id="grandTotal">0</td></tr>`;
   document.getElementById("inputFoot").innerHTML = ftRow;
 
-  // ── Build defect legend ──
   const legend = document.getElementById("defectLegend");
-  loaiLoi.forEach((name, j) => {
-    legend.innerHTML += `<span><b>L${j + 1}</b>: ${name}</span>`;
-  });
+  loaiLoi.forEach((name, j) => { legend.innerHTML += `<span><b>L${j + 1}</b>: ${name}</span>`; });
 
   // ── Helpers ──
   function getData() {
@@ -425,8 +415,7 @@
     const data = getData();
     let grand = 0;
     data.forEach((row, i) => {
-      const rowSum = row.reduce((a, b) => a + b, 0);
-      document.getElementById(`rt_${i}`).textContent = rowSum;
+      document.getElementById(`rt_${i}`).textContent = row.reduce((a, b) => a + b, 0);
     });
     loaiLoi.forEach((_, j) => {
       const colSum = data.reduce((a, row) => a + row[j], 0);
@@ -436,20 +425,61 @@
     document.getElementById("grandTotal").textContent = grand;
   }
 
+  function showToast(msg, isError = false) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '') + ' show';
+    setTimeout(() => { t.className = 'toast'; }, 3500);
+  }
+
+  // ── Tabs ──
+  function showTab(tab) {
+    document.getElementById('tabInput').style.display   = tab === 'input'   ? 'block' : 'none';
+    document.getElementById('tabHistory').style.display = tab === 'history' ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && tab === 'input') || (i === 1 && tab === 'history'));
+    });
+    if (tab === 'history') loadHistory();
+  }
+
   // ── Charts ──
   let chartProcess, chartDefect;
 
-  function guiBaoCao() {
+  async function guiBaoCao() {
+    const staffName = document.getElementById("staffName").value.trim();
+    if (!staffName) { showToast('⚠️ Vui lòng nhập tên nhân viên!', true); return; }
+
     const data    = getData();
     const rowTots = data.map(row => row.reduce((a, b) => a + b, 0));
     const colTots = loaiLoi.map((_, j) => data.reduce((a, row) => a + row[j], 0));
     const grand   = rowTots.reduce((a, b) => a + b, 0);
 
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang lưu...';
+
+    const { error } = await sb.from('qc_reports').insert({
+      staff_name: staffName,
+      data: data,
+      row_totals: rowTots,
+      col_totals: colTots,
+      grand_total: grand
+    });
+
+    btn.disabled = false;
+    btn.textContent = '✅ Gửi Báo Cáo';
+
+    if (error) { showToast('❌ Lỗi lưu dữ liệu: ' + error.message, true); return; }
+
+    showToast('✅ Báo cáo đã được lưu thành công!');
+    renderDashboard(data, rowTots, colTots, grand, staffName);
+  }
+
+  function renderDashboard(data, rowTots, colTots, grand, staffName) {
     const worstProcIdx   = rowTots.indexOf(Math.max(...rowTots));
     const worstDefectIdx = colTots.indexOf(Math.max(...colTots));
     const cleanProcs     = rowTots.filter(t => t === 0).length;
 
-    // Stats
     document.getElementById("statsRow").innerHTML = `
       <div class="stat-box red">
         <div class="number">${grand}</div>
@@ -469,56 +499,28 @@
       </div>
     `;
 
-    // Chart by process
     if (chartProcess) chartProcess.destroy();
     chartProcess = new Chart(document.getElementById("barProcess"), {
       type: "bar",
-      data: {
-        labels: congDoan,
-        datasets: [{ label: "Số lỗi", data: rowTots, backgroundColor: mauSac, borderRadius: 6 }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1 } },
-          x: { ticks: { font: { size: 11 } } }
-        }
-      }
+      data: { labels: congDoan, datasets: [{ label: "Số lỗi", data: rowTots, backgroundColor: mauSac, borderRadius: 6 }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: { font: { size: 11 } } } } }
     });
 
-    // Chart by defect type
     if (chartDefect) chartDefect.destroy();
     chartDefect = new Chart(document.getElementById("barDefect"), {
       type: "bar",
-      data: {
-        labels: loaiLoi,
-        datasets: [{ label: "Số lỗi", data: colTots, backgroundColor: mauSac, borderRadius: 6 }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, ticks: { stepSize: 1 } },
-          x: { ticks: { font: { size: 11 } } }
-        }
-      }
+      data: { labels: loaiLoi, datasets: [{ label: "Số lỗi", data: colTots, backgroundColor: mauSac, borderRadius: 6 }] },
+      options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: { font: { size: 11 } } } } }
     });
 
-    // Summary report table
-    let rt = `<thead><tr>
-      <th class="process-col">Công Đoạn</th>`;
+    let rt = `<thead><tr><th class="process-col">Công Đoạn</th>`;
     loaiLoi.forEach(l => { rt += `<th>${l}</th>`; });
     rt += `<th class="total-col">Tổng</th></tr></thead><tbody>`;
-
     congDoan.forEach((cd, i) => {
       rt += `<tr><td class="process-name">${i + 1}. ${cd}</td>`;
-      data[i].forEach(val => {
-        rt += `<td class="${val > 0 ? 'has-error' : ''}">${val > 0 ? val : '–'}</td>`;
-      });
+      data[i].forEach(val => { rt += `<td class="${val > 0 ? 'has-error' : ''}">${val > 0 ? val : '–'}</td>`; });
       rt += `<td class="row-total">${rowTots[i]}</td></tr>`;
     });
-
     rt += `</tbody><tfoot><tr><td class="col-label">Tổng Cộng</td>`;
     colTots.forEach(ct => { rt += `<td>${ct}</td>`; });
     rt += `<td class="grand-total">${grand}</td></tr></tfoot>`;
@@ -539,6 +541,81 @@
     document.getElementById("inputSection").style.display = "block";
     document.getElementById("dashboard").style.display = "none";
     window.scrollTo(0, 0);
+  }
+
+  // ── History ──
+  async function loadHistory() {
+    const el = document.getElementById("historyContent");
+    el.className = 'loading';
+    el.innerHTML = 'Đang tải...';
+
+    const { data, error } = await sb.from('qc_reports')
+      .select('id, staff_name, report_date, grand_total, created_at, row_totals, col_totals, data')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) { el.innerHTML = '❌ Không thể tải dữ liệu.'; return; }
+    if (!data.length) { el.className = 'history-empty'; el.innerHTML = 'Chưa có báo cáo nào.'; return; }
+
+    el.className = 'history-list';
+    el.innerHTML = data.map(r => {
+      const dt = new Date(r.created_at);
+      const dateStr = dt.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
+      const timeStr = dt.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' });
+      return `
+        <div class="history-item" onclick="viewReport('${r.id}')">
+          <div class="hi-top">
+            <div>
+              <div class="hi-staff">👤 ${r.staff_name}</div>
+              <div class="hi-date">📅 ${dateStr} lúc ${timeStr}</div>
+            </div>
+            <div style="text-align:right">
+              <div class="hi-total">${r.grand_total}</div>
+              <div class="hi-label">tổng lỗi</div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // cache for modal
+    window._reportCache = {};
+    data.forEach(r => { window._reportCache[r.id] = r; });
+  }
+
+  function viewReport(id) {
+    const r = window._reportCache[id];
+    if (!r) return;
+
+    const dt = new Date(r.created_at);
+    const dateStr = dt.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const timeStr = dt.toLocaleTimeString('vi-VN', { hour:'2-digit', minute:'2-digit' });
+
+    document.getElementById("modalTitle").textContent = `${r.staff_name} – ${dateStr} ${timeStr}`;
+
+    const rowTots = r.row_totals;
+    const colTots = r.col_totals;
+    const data    = r.data;
+
+    let rt = `<div style="overflow-x:auto"><table class="report-table"><thead><tr><th class="process-col">Công Đoạn</th>`;
+    loaiLoi.forEach(l => { rt += `<th>${l}</th>`; });
+    rt += `<th class="total-col">Tổng</th></tr></thead><tbody>`;
+    congDoan.forEach((cd, i) => {
+      rt += `<tr><td class="process-name">${i + 1}. ${cd}</td>`;
+      data[i].forEach(val => { rt += `<td class="${val > 0 ? 'has-error' : ''}">${val > 0 ? val : '–'}</td>`; });
+      rt += `<td class="row-total">${rowTots[i]}</td></tr>`;
+    });
+    rt += `</tbody><tfoot><tr><td class="col-label">Tổng Cộng</td>`;
+    colTots.forEach(ct => { rt += `<td>${ct}</td>`; });
+    rt += `<td class="grand-total">${r.grand_total}</td></tr></tfoot></table></div>`;
+
+    document.getElementById("modalBody").innerHTML = rt;
+    document.getElementById("modalOverlay").classList.add('open');
+  }
+
+  function closeModal(e) {
+    if (!e || e.target === document.getElementById("modalOverlay") || e.currentTarget?.classList.contains('close-btn')) {
+      document.getElementById("modalOverlay").classList.remove('open');
+    }
   }
 </script>
 </body>
