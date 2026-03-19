@@ -1293,6 +1293,8 @@ function initApp() {
     showPage('input');
   } else if (role === 'manager') {
     showPage('manager');
+  } else if (role === 'line_supervisor') {
+    showPage('display');
   } else {
     showPage('input');
   }
@@ -1308,8 +1310,9 @@ function getTabsForRole(role) {
     {page:'admin',   label:'⚙️ Tài Khoản',     icon:'⚙️', short:'Admin'},
     {page:'display', label:'📺 Màn Hình',       icon:'📺', short:'Màn Hình'},
   ];
-  if (role === 'staff')   return [allTabs[0], allTabs[6]];
-  if (role === 'manager') return [allTabs[1], allTabs[2], allTabs[3], allTabs[4], allTabs[6], {page:'admin', label:'⚙️ Quản Lý', icon:'⚙️', short:'Quản Lý'}];
+  if (role === 'staff')        return [allTabs[0]];
+  if (role === 'manager')      return [allTabs[1], allTabs[2], allTabs[3], allTabs[4], {page:'admin', label:'⚙️ Quản Lý', icon:'⚙️', short:'Quản Lý'}];
+  if (role === 'line_supervisor') return [allTabs[6]];
   return allTabs;
 }
 
