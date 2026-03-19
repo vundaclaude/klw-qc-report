@@ -3393,6 +3393,7 @@ function renderDisplay(rows) {
       },
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{
+          datalabels:{display:true},
           legend:{display:true,labels:{color:'rgba(255,255,255,0.5)',font:{size:10},boxWidth:10,padding:12}},
           tooltip:{mode:'index',intersect:false,callbacks:{
             title:function(items){var d=DEFECTS[items[0].dataIndex];return d.code+' · '+d.vn;},
@@ -3428,6 +3429,7 @@ function renderDisplay(rows) {
       },
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{
+          datalabels:{display:true},
           legend:{display:true,labels:{color:'rgba(255,255,255,0.5)',font:{size:10},boxWidth:10,padding:12}},
           tooltip:{mode:'index',intersect:false}
         },
@@ -3498,7 +3500,7 @@ function renderDisplay(rows) {
             ]
           },
           options:{responsive:true,maintainAspectRatio:false,
-            plugins:{legend:{display:false},tooltip:{callbacks:{label:function(it){return it.datasetIndex===0?' '+it.raw+' lỗi':'';}}}},
+            plugins:{datalabels:{display:true},legend:{display:false},tooltip:{callbacks:{label:function(it){return it.datasetIndex===0?' '+it.raw+' lỗi':'';}}}},
             scales:{
               x:{ticks:{color:'rgba(255,255,255,0.38)',font:{size:9}},grid:{display:false}},
               y:{ticks:{color:'rgba(255,255,255,0.38)',font:{size:9},maxTicksLimit:4},grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true}
