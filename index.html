@@ -1240,6 +1240,7 @@ let dispMiniCharts = [];
 let dispRefreshTimer = null;
 let dispCountdownTimer = null;
 let dispNextRefresh = null;
+let dispRealtimeChannel = null;
 let managerData = [];
 let managerDateFilter = 'all';
 let managerLineFilter = 'all';
@@ -1361,6 +1362,7 @@ function logout() {
   histSubmissions = [];
   if (dispRefreshTimer) { clearInterval(dispRefreshTimer); dispRefreshTimer = null; }
   if (dispCountdownTimer) { clearInterval(dispCountdownTimer); dispCountdownTimer = null; }
+  if (dispRealtimeChannel) { sb.removeChannel(dispRealtimeChannel); dispRealtimeChannel = null; }
   showLoginScreen();
 }
 
@@ -3278,6 +3280,15 @@ function initDisplayPage() {
   dispRefreshTimer = setInterval(loadDisplay, 5*60*1000);
   if (dispCountdownTimer) clearInterval(dispCountdownTimer);
   dispCountdownTimer = setInterval(updateDispCountdown, 1000);
+  if (dispRealtimeChannel) { sb.removeChannel(dispRealtimeChannel); dispRealtimeChannel = null; }
+  dispRealtimeChannel = sb.channel('disp-line-' + (currentUser.line_number || 'all'))
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'qc_submissions',
+      filter: 'line_number=eq.' + currentUser.line_number
+    }, function() { loadDisplay(); })
+    .subscribe();
 }
 
 function updateDispCountdown() {
