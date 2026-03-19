@@ -1246,6 +1246,11 @@ async function doLogin() {
       errEl.style.display = 'block';
       return;
     }
+    if (data.is_active === false) {
+      errEl.textContent = 'Tài khoản đã bị vô hiệu hóa. Liên hệ quản trị viên.';
+      errEl.style.display = 'block';
+      return;
+    }
 
     currentUser = data;
     sessionStorage.setItem('klw_user', JSON.stringify(data));
@@ -2225,16 +2230,22 @@ function renderUsers(users) {
   }
   tbody.innerHTML = users.map(function(u, i) {
     const isSelf = currentUser && u.id === currentUser.id;
-    return '<tr>' +
+    const active = u.is_active !== false;
+    const rowStyle = active ? '' : 'opacity:0.45;';
+    const disabledBadge = active ? '' : '<span class="badge" style="background:rgba(231,76,60,0.12);color:var(--red);margin-left:6px;">Đã tắt</span>';
+    return '<tr style="' + rowStyle + '">' +
       '<td>' + (i+1) + '</td>' +
-      '<td><strong>' + u.username + '</strong></td>' +
+      '<td><strong>' + u.username + '</strong>' + disabledBadge + '</td>' +
       '<td>' + (u.display_name || '—') + '</td>' +
       '<td><span class="role-badge ' + u.role + '">' + u.role + '</span></td>' +
       '<td style="font-size:12px;color:var(--muted);">' + new Date(u.created_at).toLocaleDateString('vi-VN') + '</td>' +
-      '<td>' +
-        '<button class="btn btn-outline btn-sm" onclick="showChangePwModal(\'' + u.id + '\',\'' + u.username + '\')" style="margin-right:4px;">🔑 Đổi MK</button>' +
-        (isSelf ? '<span style="font-size:12px;color:var(--muted);">(bạn)</span>' :
-          '<button class="btn btn-danger btn-sm" onclick="deleteUser(\'' + u.id + '\',\'' + u.username + '\')">🗑</button>') +
+      '<td style="display:flex;gap:4px;flex-wrap:wrap;">' +
+        '<button class="btn btn-outline btn-sm" onclick="showChangePwModal(\'' + u.id + '\',\'' + u.username + '\')">🔑 Đổi MK</button>' +
+        (isSelf ? '<span style="font-size:12px;color:var(--muted);line-height:34px;">(bạn)</span>' :
+          active
+            ? '<button class="btn btn-sm" style="background:rgba(231,76,60,0.1);color:var(--red);border:1px solid rgba(231,76,60,0.3);" onclick="toggleUserActive(\'' + u.id + '\',\'' + u.username + '\',false)">🚫 Tắt</button>'
+            : '<button class="btn btn-sm" style="background:rgba(39,174,96,0.1);color:var(--green);border:1px solid rgba(39,174,96,0.3);" onclick="toggleUserActive(\'' + u.id + '\',\'' + u.username + '\',true)">✅ Bật</button>'
+        ) +
       '</td>' +
     '</tr>';
   }).join('');
@@ -2308,6 +2319,19 @@ async function deleteUser(userId, username) {
     const { error } = await sb.from('users').delete().eq('id', userId);
     if (error) throw error;
     showToast('✅ Đã xóa tài khoản');
+    loadUsers();
+  } catch(e) {
+    showToast('Lỗi: ' + e.message, true);
+  }
+}
+
+async function toggleUserActive(userId, username, enable) {
+  const action = enable ? 'bật' : 'tắt';
+  if (!confirm((enable ? 'Bật' : 'Tắt') + ' tài khoản "' + username + '"?')) return;
+  try {
+    const { error } = await sb.from('users').update({is_active: enable}).eq('id', userId);
+    if (error) throw error;
+    showToast('✅ Đã ' + action + ' tài khoản ' + username);
     loadUsers();
   } catch(e) {
     showToast('Lỗi: ' + e.message, true);
