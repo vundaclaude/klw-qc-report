@@ -61,6 +61,7 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 .role-badge.admin{background:rgba(231,76,60,0.3);color:#ff8a7a;}
 .role-badge.manager{background:rgba(79,110,247,0.3);color:#a5b4fc;}
 .role-badge.staff{background:rgba(39,174,96,0.3);color:#6ee7a0;}
+.role-badge.line_supervisor{background:rgba(243,156,18,0.3);color:#fcd34d;}
 .btn-logout{padding:6px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
   border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;}
 .btn-logout:hover{background:rgba(231,76,60,0.3);}
@@ -978,10 +979,23 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
       <div class="fld"><label>Tên hiển thị</label><input type="text" id="newDisplayName" placeholder="Tên đầy đủ"></div>
       <div class="fld">
         <label>Vai trò</label>
-        <select id="newRole">
+        <select id="newRole" onchange="onRoleChange(this.value)">
           <option value="staff">Staff</option>
           <option value="manager">Manager</option>
           <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" id="lineNumRow" style="display:none;">
+      <div class="fld">
+        <label>Chuyền phụ trách</label>
+        <select id="newLineNumber" class="filter-select" style="width:100%;height:48px;">
+          <option value="">-- Chọn chuyền --</option>
+          <option value="10">Chuyền 10</option><option value="11">Chuyền 11</option>
+          <option value="12">Chuyền 12</option><option value="13">Chuyền 13</option>
+          <option value="14">Chuyền 14</option><option value="15">Chuyền 15</option>
+          <option value="16">Chuyền 16</option><option value="17">Chuyền 17</option>
+          <option value="18">Chuyền 18</option><option value="19">Chuyền 19</option>
         </select>
       </div>
     </div>
@@ -2237,7 +2251,7 @@ function renderUsers(users) {
       '<td>' + (i+1) + '</td>' +
       '<td><strong>' + u.username + '</strong>' + disabledBadge + '</td>' +
       '<td>' + (u.display_name || '—') + '</td>' +
-      '<td><span class="role-badge ' + u.role + '">' + u.role + '</span></td>' +
+      '<td><span class="role-badge ' + u.role + '">' + u.role + '</span>' + (u.line_number ? '<span style="font-size:11px;color:var(--muted);margin-left:6px;">C' + u.line_number + '</span>' : '') + '</td>' +
       '<td style="font-size:12px;color:var(--muted);">' + new Date(u.created_at).toLocaleDateString('vi-VN') + '</td>' +
       '<td style="display:flex;gap:4px;flex-wrap:wrap;">' +
         '<button class="btn btn-outline btn-sm" onclick="showChangePwModal(\'' + u.id + '\',\'' + u.username + '\')">🔑 Đổi MK</button>' +
@@ -2251,6 +2265,11 @@ function renderUsers(users) {
   }).join('');
 }
 
+function onRoleChange(role) {
+  document.getElementById('lineNumRow').style.display = role === 'line_supervisor' ? '' : 'none';
+  if (role !== 'line_supervisor') document.getElementById('newLineNumber').value = '';
+}
+
 function showAddUserModal() {
   document.getElementById('newUsername').value = '';
   document.getElementById('newPassword').value = '';
@@ -2259,9 +2278,11 @@ function showAddUserModal() {
   if (currentUser.role === 'manager') {
     roleSelect.innerHTML = '<option value="staff">Staff</option>';
   } else {
-    roleSelect.innerHTML = '<option value="staff">Staff</option><option value="manager">Manager</option><option value="admin">Admin</option>';
+    roleSelect.innerHTML = '<option value="staff">Staff</option><option value="manager">Manager</option><option value="line_supervisor">Line Supervisor</option><option value="admin">Admin</option>';
   }
   roleSelect.value = 'staff';
+  document.getElementById('lineNumRow').style.display = 'none';
+  document.getElementById('newLineNumber').value = '';
   document.getElementById('addUserModal').classList.remove('hidden');
 }
 
@@ -2270,12 +2291,14 @@ async function createUser() {
   const password = document.getElementById('newPassword').value.trim().toLowerCase();
   const display_name = document.getElementById('newDisplayName').value.trim();
   const role = document.getElementById('newRole').value;
+  const line_number = document.getElementById('newLineNumber').value || null;
   if (!username || !password) { showToast('Vui lòng nhập đủ thông tin', true); return; }
   if (currentUser.role === 'manager' && role !== 'staff') { showToast('Manager chỉ được tạo tài khoản Staff', true); return; }
+  if (role === 'line_supervisor' && !line_number) { showToast('Vui lòng chọn chuyền phụ trách', true); return; }
   let lastErr;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const { error } = await sb.from('users').insert({username, password, display_name, role});
+      const { error } = await sb.from('users').insert({username, password, display_name, role, line_number});
       if (error) throw error;
       document.getElementById('addUserModal').classList.add('hidden');
       showToast('✅ Tài khoản đã được tạo!');
