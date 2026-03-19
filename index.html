@@ -111,6 +111,31 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 #toast.error{background:var(--red);}
 @media(min-width:641px){#toast{bottom:24px;}}
 
+/* ===== TAB 7 — DISPLAY ===== */
+.display-header-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px;}
+.display-title{font-size:20px;font-weight:800;color:var(--navy);}
+.display-meta{font-size:12px;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.display-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+@media(max-width:900px){.display-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:640px){.display-grid{grid-template-columns:repeat(2,1fr);}}
+.display-card{background:var(--card);border-radius:16px;padding:20px 16px;text-align:center;
+  border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:border-color 0.3s;}
+.display-green{border-color:var(--green);background:rgba(39,174,96,0.04);}
+.display-yellow{border-color:#c9a000;background:rgba(201,160,0,0.04);}
+.display-red{border-color:var(--red);background:rgba(231,76,60,0.05);}
+.display-muted{border-color:var(--border);}
+.display-line-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.display-line-num{font-size:40px;font-weight:800;color:var(--navy);line-height:1.1;margin:2px 0;}
+.display-rate{font-size:36px;font-weight:800;line-height:1;margin:8px 0 2px;}
+.display-rate-green{color:var(--green);}
+.display-rate-yellow{color:#c9a000;}
+.display-rate-red{color:var(--red);}
+.display-rate-muted{color:var(--muted);font-size:28px;}
+.display-rate-label{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:8px;}
+.display-stats{display:flex;justify-content:center;gap:10px;font-size:12px;color:var(--text);font-weight:600;}
+.display-last-time{font-size:11px;color:var(--muted);margin-top:6px;}
+.display-no-data{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic;}
+
 /* ===== TAB 1 — WIZARD ===== */
 #wizardWrap{max-width:540px;margin:0 auto;}
 .wizard-clock{display:flex;align-items:center;justify-content:space-between;
@@ -347,6 +372,10 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 .modal-title{font-size:18px;font-weight:800;color:var(--navy);}
 .modal-close{width:32px;height:32px;border-radius:8px;background:var(--bg);border:none;
   font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pw-wrap{position:relative;display:flex;align-items:center;}
+.pw-wrap input{flex:1;padding-right:40px;}
+.pw-toggle{position:absolute;right:10px;background:none;border:none;cursor:pointer;
+  font-size:16px;color:var(--muted);padding:0;line-height:1;}
 
 /* ===== TAB 4 — ADMIN ===== */
 .admin-section{background:var(--card);border-radius:14px;border:1px solid var(--border);
@@ -899,6 +928,24 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
     </div>
   </div>
 
+  <!-- TAB 7: DISPLAY -->
+  <div class="page" id="pageDisplay">
+    <div class="display-header-bar">
+      <div>
+        <div class="display-title">📺 Màn Hình Chuyền</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="displayDateStr"></div>
+      </div>
+      <div class="display-meta">
+        <span id="displayLastRefresh">—</span>
+        <span id="displayCountdown" style="color:var(--blue);font-weight:700;"></span>
+        <button class="btn btn-outline btn-sm" onclick="loadDisplay()">🔄 Tải lại</button>
+      </div>
+    </div>
+    <div class="display-grid" id="displayGrid">
+      <div class="loading-center" style="grid-column:1/-1;padding:40px;"><div class="spinner"></div><span>Đang tải...</span></div>
+    </div>
+  </div>
+
 </div><!-- end #app -->
 
 <!-- BOTTOM NAV -->
@@ -920,7 +967,12 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
     </div>
     <div class="form-row">
       <div class="fld"><label>Username</label><input type="text" id="newUsername" placeholder="username"></div>
-      <div class="fld"><label>Mật khẩu</label><input type="password" id="newPassword" placeholder="••••••"></div>
+      <div class="fld"><label>Mật khẩu</label>
+        <div class="pw-wrap">
+          <input type="password" id="newPassword" placeholder="Nhập mật khẩu" autocomplete="new-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('newPassword',this)" tabindex="-1">👁</button>
+        </div>
+      </div>
     </div>
     <div class="form-row">
       <div class="fld"><label>Tên hiển thị</label><input type="text" id="newDisplayName" placeholder="Tên đầy đủ"></div>
@@ -950,7 +1002,10 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
     <input type="hidden" id="changePwUserId">
     <div class="fld" style="margin-bottom:12px;">
       <label>Mật khẩu mới</label>
-      <input type="password" id="newPwInput" placeholder="Mật khẩu mới">
+      <div class="pw-wrap">
+        <input type="password" id="newPwInput" placeholder="Nhập mật khẩu mới" autocomplete="new-password">
+        <button type="button" class="pw-toggle" onclick="togglePw('newPwInput',this)" tabindex="-1">👁</button>
+      </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn btn-outline" onclick="document.getElementById('changePwModal').classList.add('hidden')">Hủy</button>
@@ -1251,9 +1306,10 @@ function getTabsForRole(role) {
     {page:'export',  label:'📥 Xuất Dữ Liệu',  icon:'📥', short:'Xuất'},
     {page:'perf',    label:'📈 Hiệu Suất',      icon:'📈', short:'Hiệu Suất'},
     {page:'admin',   label:'⚙️ Tài Khoản',     icon:'⚙️', short:'Admin'},
+    {page:'display', label:'📺 Màn Hình',       icon:'📺', short:'Màn Hình'},
   ];
-  if (role === 'staff')   return [allTabs[0]];
-  if (role === 'manager') return [allTabs[1], allTabs[2], allTabs[3], allTabs[4], {page:'admin', label:'⚙️ Quản Lý', icon:'⚙️', short:'Quản Lý'}];
+  if (role === 'staff')   return [allTabs[0], allTabs[6]];
+  if (role === 'manager') return [allTabs[1], allTabs[2], allTabs[3], allTabs[4], allTabs[6], {page:'admin', label:'⚙️ Quản Lý', icon:'⚙️', short:'Quản Lý'}];
   return allTabs;
 }
 
@@ -1289,7 +1345,7 @@ function buildBottomNav() {
 function showPage(page) {
   currentPage = page;
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-  const pageMap = {input:'pageInput', manager:'pageManager', history:'pageHistory', export:'pageExport', perf:'pagePerf', admin:'pageAdmin'};
+  const pageMap = {input:'pageInput', manager:'pageManager', history:'pageHistory', export:'pageExport', perf:'pagePerf', admin:'pageAdmin', display:'pageDisplay'};
   const el = document.getElementById(pageMap[page]);
   if (el) el.classList.add('active');
   const fl = document.getElementById('dateRangeLabel');
@@ -3081,6 +3137,14 @@ async function restoreSubmission(id) {
 // ===========================
 // MODAL UTILS
 // ===========================
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+}
+
 function closeModal(e) {
   if (e && e.target && e.target.classList.contains('modal-overlay')) {
     e.target.classList.add('hidden');
