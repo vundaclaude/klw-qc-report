@@ -112,30 +112,63 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
 #toast.error{background:var(--red);}
 @media(min-width:641px){#toast{bottom:24px;}}
 
-/* ===== TAB 7 — DISPLAY ===== */
-.display-header-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px;}
-.display-title{font-size:20px;font-weight:800;color:var(--navy);}
-.display-meta{font-size:12px;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
-.display-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
-@media(max-width:900px){.display-grid{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:640px){.display-grid{grid-template-columns:repeat(2,1fr);}}
-.display-card{background:var(--card);border-radius:16px;padding:20px 16px;text-align:center;
-  border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.06);transition:border-color 0.3s;}
-.display-green{border-color:var(--green);background:rgba(39,174,96,0.04);}
-.display-yellow{border-color:#c9a000;background:rgba(201,160,0,0.04);}
-.display-red{border-color:var(--red);background:rgba(231,76,60,0.05);}
-.display-muted{border-color:var(--border);}
-.display-line-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
-.display-line-num{font-size:40px;font-weight:800;color:var(--navy);line-height:1.1;margin:2px 0;}
-.display-rate{font-size:36px;font-weight:800;line-height:1;margin:8px 0 2px;}
-.display-rate-green{color:var(--green);}
-.display-rate-yellow{color:#c9a000;}
-.display-rate-red{color:var(--red);}
-.display-rate-muted{color:var(--muted);font-size:28px;}
-.display-rate-label{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:8px;}
-.display-stats{display:flex;justify-content:center;gap:10px;font-size:12px;color:var(--text);font-weight:600;}
-.display-last-time{font-size:11px;color:var(--muted);margin-top:6px;}
-.display-no-data{font-size:12px;color:var(--muted);margin-top:8px;font-style:italic;}
+/* ===== TAB 7 — DISPLAY (line_supervisor full-screen) ===== */
+#pageDisplay{padding:0!important;max-width:100%!important;margin:0!important;
+  height:calc(100vh - 72px);background:#0b0f24;overflow:hidden;}
+#pageDisplay.active{display:flex!important;flex-direction:column;}
+.disp-hd{background:linear-gradient(135deg,#0f1535 0%,#1a2250 100%);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  padding:10px 24px;display:flex;align-items:center;flex-shrink:0;}
+.disp-hd-line{display:flex;flex-direction:column;margin-right:28px;}
+.disp-hd-line-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;}
+.disp-hd-line-num{font-size:38px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;}
+.disp-hd-div{width:1px;height:52px;background:rgba(255,255,255,0.08);margin-right:28px;}
+.disp-hd-kpi{display:flex;flex-direction:column;margin-right:28px;}
+.disp-hd-kpi-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;}
+.disp-hd-kpi-val{font-size:36px;font-weight:900;line-height:1.05;letter-spacing:-0.5px;}
+.disp-hd-kpi-val.blue{color:#4f6ef7;}
+.disp-hd-kpi-val.red{color:#e74c3c;}
+.disp-hd-kpi-val.green{color:#27ae60;}
+.disp-hd-kpi-val.yellow{color:#c9a000;}
+.disp-hd-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.disp-hd-date{font-size:13px;font-weight:700;color:rgba(255,255,255,0.75);}
+.disp-hd-refresh{font-size:11px;color:rgba(255,255,255,0.38);}
+.disp-hd-countdown{font-size:13px;font-weight:800;color:#4f6ef7;}
+.disp-main-row{display:grid;grid-template-columns:3fr 2fr;gap:10px;
+  padding:10px 10px 0;flex-shrink:0;height:260px;}
+.disp-chart-card{background:#131936;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);padding:12px 14px;
+  display:flex;flex-direction:column;overflow:hidden;}
+.disp-chart-title{font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);
+  text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;flex-shrink:0;}
+.disp-chart-card canvas{flex:1;min-height:0;width:100%!important;}
+.disp-top4-row{display:grid;grid-template-columns:repeat(4,1fr);
+  gap:10px;padding:10px;flex:1;min-height:0;}
+.disp-mini-card{background:#131936;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);padding:12px 14px;
+  display:flex;flex-direction:column;min-height:0;color:#e8eaf6;}
+.disp-mini-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;flex-shrink:0;}
+.disp-mini-lhs{display:flex;align-items:center;gap:7px;}
+.disp-mini-rank{width:24px;height:24px;border-radius:7px;font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.disp-r1{background:rgba(255,215,0,0.18);color:#ffd700;}
+.disp-r2{background:rgba(192,192,192,0.18);color:#c0c0c0;}
+.disp-r3{background:rgba(205,127,50,0.18);color:#cd7f32;}
+.disp-r4{background:rgba(79,110,247,0.18);color:#818cf8;}
+.disp-mini-code{font-size:14px;font-weight:800;color:#fff;}
+.disp-mini-name{font-size:10px;color:rgba(255,255,255,0.4);margin-top:1px;line-height:1.3;}
+.disp-mini-rhs{text-align:right;flex-shrink:0;}
+.disp-mini-count{font-size:26px;font-weight:900;color:#e74c3c;line-height:1;}
+.disp-mini-count-lbl{font-size:9px;color:rgba(255,255,255,0.38);}
+.disp-trend{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;
+  padding:2px 6px;border-radius:5px;margin-top:4px;}
+.disp-trend.up{background:rgba(231,76,60,0.2);color:#ff8a7a;}
+.disp-trend.dn{background:rgba(39,174,96,0.2);color:#6ee7a0;}
+.disp-trend.flat{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);}
+.disp-mini-chart-wrap{flex:1;min-height:0;position:relative;}
+.disp-mini-chart-wrap canvas{position:absolute;inset:0;width:100%!important;height:100%!important;}
+.disp-no-data{display:flex;align-items:center;justify-content:center;flex:1;
+  font-size:14px;color:rgba(255,255,255,0.3);font-style:italic;grid-column:1/-1;}
 
 /* ===== TAB 1 — WIZARD ===== */
 #wizardWrap{max-width:540px;margin:0 auto;}
@@ -929,22 +962,48 @@ body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--te
     </div>
   </div>
 
-  <!-- TAB 7: DISPLAY -->
+  <!-- TAB 7: DISPLAY (line_supervisor) -->
   <div class="page" id="pageDisplay">
-    <div class="display-header-bar">
-      <div>
-        <div class="display-title">📺 Màn Hình Chuyền</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="displayDateStr"></div>
+    <!-- Header bar -->
+    <div class="disp-hd">
+      <div class="disp-hd-line">
+        <span class="disp-hd-line-label">Chuyền</span>
+        <span class="disp-hd-line-num" id="dispLineNum">—</span>
       </div>
-      <div class="display-meta">
-        <span id="displayLastRefresh">—</span>
-        <span id="displayCountdown" style="color:var(--blue);font-weight:700;"></span>
-        <button class="btn btn-outline btn-sm" onclick="loadDisplay()">🔄 Tải lại</button>
+      <div class="disp-hd-div"></div>
+      <div class="disp-hd-kpi">
+        <span class="disp-hd-kpi-label">Tổng kiểm tra</span>
+        <span class="disp-hd-kpi-val blue" id="dispKpiInsp">— pcs</span>
+      </div>
+      <div class="disp-hd-div"></div>
+      <div class="disp-hd-kpi">
+        <span class="disp-hd-kpi-label">Tổng lỗi</span>
+        <span class="disp-hd-kpi-val red" id="dispKpiDef">—</span>
+      </div>
+      <div class="disp-hd-div"></div>
+      <div class="disp-hd-kpi">
+        <span class="disp-hd-kpi-label">Tỷ lệ lỗi</span>
+        <span class="disp-hd-kpi-val yellow" id="dispKpiRate">— %</span>
+      </div>
+      <div class="disp-hd-right">
+        <span class="disp-hd-date" id="dispDate"></span>
+        <span class="disp-hd-refresh" id="dispLastRefresh">—</span>
+        <span class="disp-hd-countdown" id="dispCountdown"></span>
       </div>
     </div>
-    <div class="display-grid" id="displayGrid">
-      <div class="loading-center" style="grid-column:1/-1;padding:40px;"><div class="spinner"></div><span>Đang tải...</span></div>
+    <!-- Main charts -->
+    <div class="disp-main-row">
+      <div class="disp-chart-card">
+        <div class="disp-chart-title">Tổng lỗi theo loại S01–S23 &amp; tỷ lệ từng loại</div>
+        <canvas id="chartDispAllDef"></canvas>
+      </div>
+      <div class="disp-chart-card">
+        <div class="disp-chart-title">Lỗi theo giờ &amp; tỷ lệ lỗi</div>
+        <canvas id="chartDispByHour"></canvas>
+      </div>
     </div>
+    <!-- Top 4 -->
+    <div class="disp-top4-row" id="dispTop4Row"></div>
   </div>
 
 </div><!-- end #app -->
@@ -1175,6 +1234,12 @@ let selStyle = {code:'', name:''};
 let defVals = {};
 let managerLoaded = false;
 let historyLoaded = false;
+let dispChartAllDef = null;
+let dispChartByHour = null;
+let dispMiniCharts = [];
+let dispRefreshTimer = null;
+let dispCountdownTimer = null;
+let dispNextRefresh = null;
 let managerData = [];
 let managerDateFilter = 'all';
 let managerLineFilter = 'all';
@@ -1294,6 +1359,8 @@ function logout() {
   perfLoaded = false;
   managerData = [];
   histSubmissions = [];
+  if (dispRefreshTimer) { clearInterval(dispRefreshTimer); dispRefreshTimer = null; }
+  if (dispCountdownTimer) { clearInterval(dispCountdownTimer); dispCountdownTimer = null; }
   showLoginScreen();
 }
 
@@ -1384,6 +1451,7 @@ function showPage(page) {
   if (page === 'history' && !historyLoaded) loadHistory();
   if (page === 'export') initExportPage();
   if (page === 'perf') initPerfPage();
+  if (page === 'display') initDisplayPage();
   if (page === 'admin') {
     const t = document.getElementById('userSectionTitle');
     if (t) t.textContent = currentUser.role === 'manager' ? '👥 Tài Khoản Staff' : '👥 Quản lý Tài Khoản';
@@ -3182,6 +3250,254 @@ async function restoreSubmission(id) {
   } catch(e) {
     showToast('Lỗi: ' + e.message, true);
   }
+}
+
+// ===========================
+// DISPLAY — TAB 7 (line_supervisor)
+// ===========================
+function dispTrendLine(data) {
+  const n = data.length;
+  if (n < 2) return data.slice();
+  const xMean = (n-1)/2;
+  const yMean = data.reduce(function(a,b){return a+b;},0)/n;
+  let num=0, den=0;
+  for (var i=0;i<n;i++){num+=(i-xMean)*(data[i]-yMean);den+=(i-xMean)*(i-xMean);}
+  const slope = den ? num/den : 0;
+  const intercept = yMean - slope*xMean;
+  return data.map(function(_,i){return Math.max(0,parseFloat((intercept+slope*i).toFixed(2)));});
+}
+
+function initDisplayPage() {
+  const now = new Date();
+  const el = document.getElementById('dispDate');
+  if (el) el.textContent = now.toLocaleDateString('vi-VN',{weekday:'long',year:'numeric',month:'2-digit',day:'2-digit'});
+  const ln = document.getElementById('dispLineNum');
+  if (ln) ln.textContent = currentUser.line_number || '—';
+  loadDisplay();
+  if (dispRefreshTimer) clearInterval(dispRefreshTimer);
+  dispRefreshTimer = setInterval(loadDisplay, 5*60*1000);
+  if (dispCountdownTimer) clearInterval(dispCountdownTimer);
+  dispCountdownTimer = setInterval(updateDispCountdown, 1000);
+}
+
+function updateDispCountdown() {
+  const el = document.getElementById('dispCountdown');
+  if (!el || !dispNextRefresh) return;
+  const rem = Math.max(0, Math.round((dispNextRefresh - Date.now()) / 1000));
+  const m = Math.floor(rem/60), s = rem%60;
+  el.textContent = 'Tải lại sau ' + m + ':' + String(s).padStart(2,'0');
+}
+
+async function loadDisplay() {
+  dispNextRefresh = new Date(Date.now() + 5*60*1000);
+  const lineNum = currentUser && currentUser.line_number;
+  if (!lineNum) return;
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    const { data, error } = await sb.from('qc_submissions')
+      .select('*')
+      .eq('line_number', lineNum)
+      .eq('is_active', true)
+      .gte('created_at', today + 'T00:00:00')
+      .lte('created_at', today + 'T23:59:59');
+    if (error) throw error;
+    renderDisplay(data || []);
+    const now = new Date();
+    const lrt = document.getElementById('dispLastRefresh');
+    if (lrt) lrt.textContent = 'Cập nhật lúc ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+  } catch(e) {
+    showToast('Lỗi tải màn hình: ' + e.message, true);
+  }
+}
+
+function renderDisplay(rows) {
+  const totalInspected = rows.reduce(function(s,r){return s+(r.total_inspected||0);},0);
+  const totalDefects   = rows.reduce(function(s,r){return s+(r.total_defects||0);},0);
+  const rate = totalInspected > 0 ? (totalDefects/totalInspected*100).toFixed(1) : '0.0';
+  const rateNum = parseFloat(rate);
+  const rateColor = rateNum < 9 ? 'green' : rateNum < 15 ? 'yellow' : 'red';
+
+  var ki = document.getElementById('dispKpiInsp');  if(ki) ki.textContent = totalInspected.toLocaleString() + ' pcs';
+  var kd = document.getElementById('dispKpiDef');   if(kd) kd.textContent = totalDefects.toLocaleString();
+  var kr = document.getElementById('dispKpiRate');  if(kr){kr.textContent = rate + '%'; kr.className='disp-hd-kpi-val '+rateColor;}
+
+  // Aggregate defects by code
+  var defTotals = {};
+  DEFECTS.forEach(function(d){defTotals[d.code]=0;});
+  rows.forEach(function(r){
+    if(r.defects) Object.keys(r.defects).forEach(function(code){
+      if(defTotals.hasOwnProperty(code)) defTotals[code]+=(r.defects[code]||0);
+    });
+  });
+
+  // Per-hour grouping (hour_block = "2026-03-19T07")
+  var hourMap = {};
+  rows.forEach(function(r){
+    if(!r.hour_block) return;
+    var h = r.hour_block.slice(-2)+'h';
+    if(!hourMap[h]) hourMap[h]={defects:0,inspected:0,rows:[]};
+    hourMap[h].defects  += (r.total_defects||0);
+    hourMap[h].inspected+= (r.total_inspected||0);
+    hourMap[h].rows.push(r);
+  });
+  var hourLabels   = Object.keys(hourMap).sort();
+  var hourDefects  = hourLabels.map(function(h){return hourMap[h].defects;});
+  var hourInspected= hourLabels.map(function(h){return hourMap[h].inspected;});
+  var hourRates    = hourLabels.map(function(h,i){return hourInspected[i]>0?+(hourDefects[i]/hourInspected[i]*100).toFixed(1):0;});
+
+  // Top 4
+  var top4 = DEFECTS.map(function(d){return {code:d.code,vn:d.vn,cat:d.cat,count:defTotals[d.code]||0};})
+    .filter(function(d){return d.count>0;})
+    .sort(function(a,b){return b.count-a.count;})
+    .slice(0,4);
+
+  top4.forEach(function(def){
+    def.hourly = hourLabels.map(function(h){
+      return (hourMap[h].rows||[]).reduce(function(s,r){return s+((r.defects&&r.defects[def.code])||0);},0);
+    });
+  });
+
+  var CAT_COL = {work:'#e74c3c',mach:'#e67e22',matl:'#f39c12',other:'#607d8b'};
+
+  // Chart 1: S01-S23
+  if(dispChartAllDef){dispChartAllDef.destroy();dispChartAllDef=null;}
+  var c1 = document.getElementById('chartDispAllDef');
+  if(c1){
+    var rates1 = DEFECTS.map(function(d){return totalInspected>0?+(defTotals[d.code]/totalInspected*100).toFixed(2):0;});
+    dispChartAllDef = new Chart(c1.getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:DEFECTS.map(function(d){return d.code;}),
+        datasets:[
+          {type:'bar',label:'Số lỗi',data:DEFECTS.map(function(d){return defTotals[d.code];}),
+           backgroundColor:DEFECTS.map(function(d){return CAT_COL[d.cat]+'cc';}),
+           borderRadius:4,borderSkipped:false,yAxisID:'yL',order:2,
+           datalabels:{display:function(ctx){return ctx.dataset.data[ctx.dataIndex]>0;},
+             anchor:'end',align:'end',color:'#fff',font:{size:10,weight:'700'},formatter:function(v){return v;},offset:-2}},
+          {type:'line',label:'Tỷ lệ %',data:rates1,
+           borderColor:'#a5b4fc',borderWidth:2,pointRadius:function(ctx){return rates1[ctx.dataIndex]>0?3:0;},
+           pointBackgroundColor:'#a5b4fc',tension:0.3,fill:false,yAxisID:'yR',order:1,
+           datalabels:{display:false}}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true,labels:{color:'rgba(255,255,255,0.5)',font:{size:10},boxWidth:10,padding:12}},
+          tooltip:{mode:'index',intersect:false,callbacks:{
+            title:function(items){var d=DEFECTS[items[0].dataIndex];return d.code+' · '+d.vn;},
+            label:function(i){return i.datasetIndex===0?' '+i.raw+' lỗi':' '+i.raw+'%';}
+          }}
+        },
+        scales:{
+          x:{ticks:{color:'rgba(255,255,255,0.5)',font:{size:10}},grid:{display:false}},
+          yL:{position:'left',ticks:{color:'rgba(255,255,255,0.45)',font:{size:10}},grid:{color:'rgba(255,255,255,0.06)'},beginAtZero:true},
+          yR:{position:'right',ticks:{color:'#a5b4fc',font:{size:10},callback:function(v){return v+'%';}},grid:{display:false},beginAtZero:true}
+        }
+      }
+    });
+  }
+
+  // Chart 2: defects by hour + rate line
+  if(dispChartByHour){dispChartByHour.destroy();dispChartByHour=null;}
+  var c2 = document.getElementById('chartDispByHour');
+  if(c2){
+    dispChartByHour = new Chart(c2.getContext('2d'),{
+      type:'bar',
+      data:{
+        labels:hourLabels,
+        datasets:[
+          {type:'bar',label:'Tổng lỗi',data:hourDefects,
+           backgroundColor:'rgba(79,110,247,0.65)',borderRadius:4,borderSkipped:false,yAxisID:'yL',order:2,
+           datalabels:{display:true,anchor:'end',align:'end',color:'#fff',font:{size:10,weight:'700'},formatter:function(v){return v;},offset:-2}},
+          {type:'line',label:'Tỷ lệ lỗi %',data:hourRates,
+           borderColor:'#f39c12',backgroundColor:'rgba(243,156,18,0.12)',borderWidth:2.5,
+           pointRadius:4,pointBackgroundColor:'#f39c12',tension:0.3,fill:true,yAxisID:'yR',order:1,
+           datalabels:{display:true,anchor:'top',align:'top',color:'#f39c12',font:{size:9,weight:'700'},formatter:function(v){return v+'%';},offset:2}}
+        ]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:true,labels:{color:'rgba(255,255,255,0.5)',font:{size:10},boxWidth:10,padding:12}},
+          tooltip:{mode:'index',intersect:false}
+        },
+        scales:{
+          x:{ticks:{color:'rgba(255,255,255,0.5)',font:{size:10}},grid:{display:false}},
+          yL:{position:'left',ticks:{color:'rgba(255,255,255,0.45)',font:{size:10}},grid:{color:'rgba(255,255,255,0.06)'},beginAtZero:true},
+          yR:{position:'right',ticks:{color:'#f39c12',font:{size:10},callback:function(v){return v+'%';}},grid:{display:false},beginAtZero:true}
+        }
+      }
+    });
+  }
+
+  // Top 4 mini cards
+  dispMiniCharts.forEach(function(ch){if(ch)ch.destroy();});
+  dispMiniCharts = [];
+  var t4row = document.getElementById('dispTop4Row');
+  if(!t4row) return;
+  t4row.innerHTML = '';
+
+  if(!top4.length){
+    t4row.innerHTML = '<div class="disp-no-data">Chưa có dữ liệu lỗi hôm nay</div>';
+    return;
+  }
+
+  var rankCls   = ['disp-r1','disp-r2','disp-r3','disp-r4'];
+  var rankLabel = ['#1','#2','#3','#4'];
+
+  top4.forEach(function(def, idx){
+    var trend = dispTrendLine(def.hourly);
+    var sl = trend.length > 1 ? trend[trend.length-1]-trend[0] : 0;
+    var tCls = sl>0.3?'up':sl<-0.3?'dn':'flat';
+    var tTxt = sl>0.3?'↑ Tăng':sl<-0.3?'↓ Giảm':'→ Ổn định';
+
+    var card = document.createElement('div');
+    card.className = 'disp-mini-card';
+    card.innerHTML =
+      '<div class="disp-mini-top">' +
+        '<div class="disp-mini-lhs">' +
+          '<div class="disp-mini-rank '+rankCls[idx]+'">'+rankLabel[idx]+'</div>' +
+          '<div><div class="disp-mini-code">'+def.code+'</div><div class="disp-mini-name">'+def.vn+'</div></div>' +
+        '</div>' +
+        '<div class="disp-mini-rhs">' +
+          '<div class="disp-mini-count">'+def.count+'</div>' +
+          '<div class="disp-mini-count-lbl">lỗi hôm nay</div>' +
+          '<div class="disp-trend '+tCls+'">'+tTxt+'</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="disp-mini-chart-wrap"><canvas id="dispMc'+idx+'"></canvas></div>';
+    t4row.appendChild(card);
+
+    (function(i, d, tr){
+      requestAnimationFrame(function(){
+        var mc = document.getElementById('dispMc'+i);
+        if(!mc) return;
+        var ch = new Chart(mc.getContext('2d'),{
+          type:'bar',
+          data:{
+            labels:hourLabels,
+            datasets:[
+              {type:'bar',label:d.code,data:d.hourly,
+               backgroundColor:CAT_COL[d.cat]+'bb',borderRadius:3,borderSkipped:false,order:2,
+               datalabels:{display:function(ctx){return ctx.dataset.data[ctx.dataIndex]>0;},
+                 anchor:'end',align:'end',color:'#fff',font:{size:9,weight:'700'},formatter:function(v){return v;},offset:-2}},
+              {type:'line',label:'Xu hướng',data:tr,
+               borderColor:'rgba(255,255,255,0.55)',borderWidth:1.5,borderDash:[4,3],
+               pointRadius:0,tension:0,fill:false,order:1,
+               datalabels:{display:false}}
+            ]
+          },
+          options:{responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{display:false},tooltip:{callbacks:{label:function(it){return it.datasetIndex===0?' '+it.raw+' lỗi':'';}}}},
+            scales:{
+              x:{ticks:{color:'rgba(255,255,255,0.38)',font:{size:9}},grid:{display:false}},
+              y:{ticks:{color:'rgba(255,255,255,0.38)',font:{size:9},maxTicksLimit:4},grid:{color:'rgba(255,255,255,0.05)'},beginAtZero:true}
+            }
+          }
+        });
+        dispMiniCharts[i] = ch;
+      });
+    })(idx, def, trend);
+  });
 }
 
 // ===========================
