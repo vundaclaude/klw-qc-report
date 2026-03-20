@@ -1314,19 +1314,16 @@ async function doLogin() {
   btn.disabled = true;
 
   try {
-    // Fetch by username (case-insensitive), then compare password client-side
-    const { data: users, error } = await sb.from('users')
-      .select('*')
-      .ilike('username', username);
+    // Server-side credential check — password never sent to client
+    const { data, error } = await sb.rpc('secure_login', {p_username: username, p_password: password});
 
     if (error) throw error;
-    const data = (users || []).find(u => u.password.toLowerCase() === password);
-    if (!data) {
+    if (!data || data.error === 'invalid_credentials') {
       errEl.textContent = 'Sai tên đăng nhập hoặc mật khẩu';
       errEl.style.display = 'block';
       return;
     }
-    if (data.is_active === false) {
+    if (data.error === 'account_disabled') {
       errEl.textContent = 'Tài khoản đã bị vô hiệu hóa. Liên hệ quản trị viên.';
       errEl.style.display = 'block';
       return;
@@ -2295,11 +2292,10 @@ async function loadUsers() {
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="6" class="loading-center"><div class="spinner"></div></td></tr>';
   try {
-    let q = sb.from('users').select('*').order('created_at');
-    if (currentUser.role === 'manager') q = q.eq('role', 'staff');
-    const { data, error } = await q;
+    const { data, error } = await sb.rpc('get_users', {p_caller_id: currentUser.id});
     if (error) throw error;
-    renderUsers(data || []);
+    if (data && data.error) throw new Error(data.error);
+    renderUsers(Array.isArray(data) ? data : []);
   } catch(e) {
     tbody.innerHTML = '<tr><td colspan="6" style="color:var(--red);padding:16px;">Lỗi: ' + e.message + '</td></tr>';
   }
@@ -2365,23 +2361,20 @@ async function createUser() {
   if (!username || !password) { showToast('Vui lòng nhập đủ thông tin', true); return; }
   if (currentUser.role === 'manager' && role !== 'staff') { showToast('Manager chỉ được tạo tài khoản Staff', true); return; }
   if (role === 'line_supervisor' && !line_number) { showToast('Vui lòng chọn chuyền phụ trách', true); return; }
-  let lastErr;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const { error } = await sb.from('users').insert({username, password, display_name, role, line_number});
-      if (error) throw error;
-      document.getElementById('addUserModal').classList.add('hidden');
-      showToast('✅ Tài khoản đã được tạo!');
-      loadUsers();
-      return;
-    } catch(e) {
-      lastErr = e;
-      if (attempt === 0 && e.message === 'Failed to fetch') await new Promise(r => setTimeout(r, 1500));
-      else break;
-    }
+  try {
+    const { data, error } = await sb.rpc('create_user_account', {
+      p_caller_id: currentUser.id, p_username: username, p_password: password,
+      p_display_name: display_name, p_role: role, p_line_number: line_number
+    });
+    if (error) throw error;
+    if (data && data.error === 'username_taken') { showToast('Tên đăng nhập đã tồn tại', true); return; }
+    if (data && data.error) throw new Error(data.error);
+    document.getElementById('addUserModal').classList.add('hidden');
+    showToast('✅ Tài khoản đã được tạo!');
+    loadUsers();
+  } catch(e) {
+    showToast('Lỗi: ' + e.message, true);
   }
-  if (lastErr.message === 'Failed to fetch') showToast('Lỗi mạng — vui lòng thử lại', true);
-  else showToast('Lỗi: ' + lastErr.message, true);
 }
 
 function showChangePwModal(userId, username) {
@@ -2397,8 +2390,11 @@ async function changePassword() {
   const pw = document.getElementById('newPwInput').value.trim().toLowerCase();
   if (!pw) { showToast('Nhập mật khẩu mới', true); return; }
   try {
-    const { error } = await sb.from('users').update({password: pw}).eq('id', userId);
+    const { data, error } = await sb.rpc('update_user_password', {
+      p_caller_id: currentUser.id, p_target_id: userId, p_password: pw
+    });
     if (error) throw error;
+    if (data && data.error) throw new Error(data.error);
     document.getElementById('changePwModal').classList.add('hidden');
     showToast('✅ Mật khẩu đã được cập nhật!');
   } catch(e) {
@@ -2409,8 +2405,11 @@ async function changePassword() {
 async function deleteUser(userId, username) {
   if (!confirm('Xóa tài khoản "' + username + '"? Hành động này không thể hoàn tác.')) return;
   try {
-    const { error } = await sb.from('users').delete().eq('id', userId);
+    const { data, error } = await sb.rpc('delete_user_account', {
+      p_caller_id: currentUser.id, p_target_id: userId
+    });
     if (error) throw error;
+    if (data && data.error) throw new Error(data.error);
     showToast('✅ Đã xóa tài khoản');
     loadUsers();
   } catch(e) {
@@ -2422,8 +2421,11 @@ async function toggleUserActive(userId, username, enable) {
   const action = enable ? 'bật' : 'tắt';
   if (!confirm((enable ? 'Bật' : 'Tắt') + ' tài khoản "' + username + '"?')) return;
   try {
-    const { error } = await sb.from('users').update({is_active: enable}).eq('id', userId);
+    const { data, error } = await sb.rpc('toggle_user_active', {
+      p_caller_id: currentUser.id, p_target_id: userId, p_active: enable
+    });
     if (error) throw error;
+    if (data && data.error) throw new Error(data.error);
     showToast('✅ Đã ' + action + ' tài khoản ' + username);
     loadUsers();
   } catch(e) {
